@@ -8,5 +8,5 @@ class Packer:
     def __init__(self):
         pass
 
-    def pack(self, container: ContainerParameters, shipments: Dict[ShipmentParameters, int]):
+    def pack(self, container: ContainerParameters, shipments_counts: Dict[ShipmentParameters, int]):
         pass

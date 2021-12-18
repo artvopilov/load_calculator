@@ -1,8 +1,8 @@
-from space_iterator import SpaceIterator
-from point import Point
+from container_iterator import ContainerIterator
+from src.point import Point
 
 
-class CornerSpaceIterator(SpaceIterator):
+class CornerContainerIterator(ContainerIterator):
     def __init__(self, space):
         super().__init__(space)
 

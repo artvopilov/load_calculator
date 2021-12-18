@@ -1,10 +1,10 @@
 import numpy as np
 from typing import Optional
 
-from parameters.container_parameters import ContainerParameters
-from parameters.shipment_parameters import ShipmentParameters
-from point import Point
-from corner_space_iterator import CornerSpaceIterator
+from src.parameters.container_parameters import ContainerParameters
+from src.parameters.shipment_parameters import ShipmentParameters
+from src.point import Point
+from iterator.corner_container_iterator import CornerContainerIterator
 
 
 class Container:
@@ -31,7 +31,7 @@ class Container:
         if total_weight + shipment.weight > self._lifting_capacity:
             return None
 
-        for point in CornerSpaceIterator(self._space):
+        for point in CornerContainerIterator(self._space):
             if self._point_fits(point, shipment):
                 return point
 

@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
-class SpaceIterator(ABC):
+class ContainerIterator(ABC):
     def __init__(self, space):
         self._space = space
         self._last_point = None

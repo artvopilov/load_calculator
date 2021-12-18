@@ -16,6 +16,7 @@ class Container:
 
     def try_load(self, shipment: ShipmentParameters) -> bool:
         loading_point = self._find_loading_point(shipment)
+        print(f'loading point: {loading_point}')
         if loading_point is None:
             return False
 
@@ -40,7 +41,6 @@ class Container:
             return None
 
         for point in CornerContainerIterator(self._space):
-            print(shipment, point)
             if self._point_fits(point, shipment):
                 return point
 
@@ -56,4 +56,7 @@ class Container:
                 or z_upper > self._space.shape[2]:
             return False
 
-        return self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] == 0
+        return (self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] == 0).all()
+
+    def __str__(self):
+        return '\n'.join(f'point: {p}, shipment: {s}' for p, s in self._point_to_shipment.items())

@@ -18,7 +18,7 @@ class Loader:
 
         for shipment in shipments_order:
             shipment_count = self._shipments_counts[shipment]
-            print(shipment, shipment_count)
+            print(f'shipment: {shipment}, count: {shipment_count}')
             for i in range(shipment_count):
                 if not self._try_load_shipment(shipment):
                     non_loadable_shipments.add(shipment)
@@ -30,14 +30,18 @@ class Loader:
         return list(sorted(self._shipments_counts.keys(), key=lambda s: (s.length + s.width + s.height, s.weight)))
 
     def _try_load_shipment(self, shipment: ShipmentParameters) -> bool:
+        print(f'loading {shipment}')
         for container in self._containers:
             if container.try_load(shipment):
+                print('loaded in existing')
                 return True
 
         container = Container(self._container_parameters)
         if container.try_load(shipment):
             self._containers.append(container)
+            print('loaded in new')
             return True
 
+        print('not loaded')
         return False
 

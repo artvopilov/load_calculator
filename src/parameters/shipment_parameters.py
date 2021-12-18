@@ -21,3 +21,6 @@ class ShipmentParameters(LoadParameters):
 
     def __hash__(self):
         return hash((self.length, self.width, self.height, self.weight))
+
+    def __str__(self):
+        return f'Shipment: ({self.length}, {self.width}, {self.height}, {self.weight})'

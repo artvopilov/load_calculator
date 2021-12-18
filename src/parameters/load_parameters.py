@@ -6,7 +6,7 @@ class LoadParameters(ABC):
     _width: int
     _height: int
 
-    def __init__(self, length: int, width: int, height: int) -> None:
+    def __init__(self, length: int, width: int, height: int):
         self._length = length
         self._width = width
         self._height = height

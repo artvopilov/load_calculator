@@ -1,40 +1,50 @@
 import numpy as np
+from typing import Optional
 
-from src.parameters.container_parameters import ContainerParameters
-from src.parameters.shipment_parameters import ShipmentParameters
-from src.point import Point
+from parameters.container_parameters import ContainerParameters
+from parameters.shipment_parameters import ShipmentParameters
+from point import Point
+from corner_space_iterator import CornerSpaceIterator
 
 
 class Container:
-    def __init__(self, container_params: ContainerParameters) -> None:
+    def __init__(self, container_params: ContainerParameters):
         self._space = np.zeros((container_params.length, container_params.width, container_params.height))
         self._lifting_capacity = container_params.lifting_capacity
 
-        self._start_point = Point(0, 0, 0)
-        self._last_point = None
-
         self._point_to_shipment = {}
 
-    def load(self, shipment: ShipmentParameters) -> bool:
-        pass
+    def load(self, point: Point, shipment: ShipmentParameters) -> None:
+        x_upper = point.x + shipment.length
+        y_upper = point.y + shipment.width
+        z_upper = point.z + shipment.height
+
+        self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] = 1
+        self._point_to_shipment[point] = shipment
 
     def unload(self) -> None:
-        pass
+        self._space.fill(0)
+        self._point_to_shipment = {}
 
-    def _fits(self, point: Point, shipment: ShipmentParameters) -> bool:
-        x = point.x
-        y = point.y
-        z = point.z
+    def find_loading_point(self, shipment: ShipmentParameters) -> Optional[Point]:
+        total_weight = sum([s.weight for s in self._point_to_shipment.values()])
+        if total_weight + shipment.weight > self._lifting_capacity:
+            return None
 
-        x_upper = x + shipment.length
-        y_upper = y + shipment.width
-        z_upper = z + shipment.height
+        for point in CornerSpaceIterator(self._space):
+            if self._point_fits(point, shipment):
+                return point
 
-        x_shape = self._space.shape[0]
-        y_shape = self._space.shape[1]
-        z_shape = self._space.shape[2]
+        return None
 
-        if x_upper > x_shape or y_upper > y_shape or z_upper > z_shape:
+    def _point_fits(self, point: Point, shipment: ShipmentParameters) -> bool:
+        x_upper = point.x + shipment.length
+        y_upper = point.y + shipment.width
+        z_upper = point.z + shipment.height
+
+        if x_upper > self._space.shape[0] \
+                or y_upper > self._space.shape[1] \
+                or z_upper > self._space.shape[2]:
             return False
 
-        return self._space[x:x_upper, y:y_upper, z:z_upper] == 0
+        return self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] == 0

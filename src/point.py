@@ -15,3 +15,11 @@ class Point:
     @property
     def z(self):
         return self._z
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Point):
+            return self.x == other.x \
+                   and self.y == other.y \
+                   and self.z == other.z
+
+        return False

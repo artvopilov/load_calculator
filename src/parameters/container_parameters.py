@@ -1,4 +1,4 @@
-from load_parameters import LoadParameters
+from src.parameters.load_parameters import LoadParameters
 
 
 class ContainerParameters(LoadParameters):

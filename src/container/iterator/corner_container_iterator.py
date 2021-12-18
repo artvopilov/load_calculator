@@ -1,4 +1,4 @@
-from container_iterator import ContainerIterator
+from src.container.iterator.container_iterator import ContainerIterator
 from src.point import Point
 
 

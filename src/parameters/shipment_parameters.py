@@ -18,3 +18,6 @@ class ShipmentParameters(LoadParameters):
                    and self._weight == other.weight
 
         return False
+
+    def __hash__(self):
+        return hash((self.length, self.width, self.height, self.weight))

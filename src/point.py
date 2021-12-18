@@ -23,3 +23,6 @@ class Point:
                    and self.z == other.z
 
         return False
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.z))

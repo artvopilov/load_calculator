@@ -14,6 +14,9 @@ class Container:
 
         self._point_to_shipment = {}
 
+    def __str__(self):
+        return '\n'.join(f'point: {p}, shipment: {s}' for p, s in self._point_to_shipment.items())
+
     def try_load(self, shipment: ShipmentParameters) -> bool:
         loading_point = self._find_loading_point(shipment)
         print(f'loading point: {loading_point}')
@@ -47,16 +50,34 @@ class Container:
         return None
 
     def _point_fits(self, point: Point, shipment: ShipmentParameters) -> bool:
-        x_upper = point.x + shipment.length
-        y_upper = point.y + shipment.width
-        z_upper = point.z + shipment.height
+        max_point = Point(point.x + shipment.length - 1,
+                          point.y + shipment.width - 1,
+                          point.z + shipment.height - 1)
 
-        if x_upper > self._space.shape[0] \
-                or y_upper > self._space.shape[1] \
-                or z_upper > self._space.shape[2]:
+        if not self._is_shipment_inside_container(point, max_point):
             return False
 
-        return (self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] == 0).all()
+        if not self._is_surface_steady(point, max_point):
+            return False
 
-    def __str__(self):
-        return '\n'.join(f'point: {p}, shipment: {s}' for p, s in self._point_to_shipment.items())
+        return self._is_sub_space_empty(point, max_point)
+
+    def _is_shipment_inside_container(self, min_point: Point, max_point: Point) -> bool:
+        return self._is_point_inside_container(min_point) and self._is_point_inside_container(max_point)
+
+    def _is_point_inside_container(self, point: Point) -> bool:
+        return 0 <= point.x < self._space.shape[0] \
+               and 0 <= point.y < self._space.shape[1] \
+               and 0 <= point.z < self._space.shape[2]
+
+    def _is_surface_steady(self, min_point: Point, max_point: Point) -> bool:
+        height = min_point.z - 1
+        if height == -1:
+            return True
+
+        surface = self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, height]
+        return (surface != 0).all()
+
+    def _is_sub_space_empty(self, min_point: Point, max_point: Point) -> bool:
+        sub_space = self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]
+        return (sub_space == 0).all()

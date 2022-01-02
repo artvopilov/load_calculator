@@ -2,13 +2,18 @@ from typing import Dict, List
 
 from parameters.shipment_parameters import ShipmentParameters
 from parameters.container_parameters import ContainerParameters
+from parameters.pallet_parameters import PalletParameters
 from container.container import Container
 
 
 class Loader:
-    def __init__(self, container_parameters: ContainerParameters, shipments_counts: Dict[ShipmentParameters, int]):
+    def __init__(self,
+                 container_parameters: ContainerParameters,
+                 shipments_counts: Dict[ShipmentParameters, int],
+                 pallet_parameters: PalletParameters):
         self._container_parameters = container_parameters
         self._shipments_counts = shipments_counts
+        self._pallet_parameters = pallet_parameters
 
         self._containers = []
 
@@ -36,7 +41,7 @@ class Loader:
                 print('loaded in existing')
                 return True
 
-        container = Container(self._container_parameters)
+        container = Container(self._container_parameters, self._pallet_parameters)
         if container.try_load(shipment):
             self._containers.append(container)
             print('loaded in new')

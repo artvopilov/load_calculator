@@ -46,6 +46,9 @@ class Container:
             return None
 
         for point in CornerContainerIterator(self._space):
+            if self._is_pallet_point(point):
+                continue
+
             if self._point_fits(point, shipment):
                 return point
 
@@ -56,6 +59,12 @@ class Container:
         if total_weight + shipment_weight > self._lifting_capacity:
             return False
         return True
+
+    def _is_pallet_point(self, point: Point):
+        if not self._pallet_parameters:
+            return False
+
+        return point.z <= self._pallet_parameters.height
 
     def _point_fits(self, point: Point, shipment: ShipmentParameters) -> bool:
         max_point = Point(point.x + shipment.length - 1,
@@ -79,19 +88,14 @@ class Container:
                and 0 <= point.z < self._space.shape[2]
 
     def _is_surface_steady(self, min_point: Point, max_point: Point) -> bool:
-        height = min_point.z - 1
-        if height == -1:
+        if min_point.z == 0:
             return True
 
-        surface = self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, height]
+        surface = self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z - 1]
         return (surface != 0).all()
 
     def _is_shipment_holdable_by_pallet(self, shipment_weight: int) -> bool:
-        total_weight = sum([s.weight for s in self._point_to_shipment.values()])
-        if total_weight + shipment_weight > self._lifting_capacity:
-            return False
         return True
-
 
     def _is_sub_space_empty(self, min_point: Point, max_point: Point) -> bool:
         sub_space = self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]

@@ -12,15 +12,5 @@ class ShipmentParameters(LoadParameters):
     def weight(self):
         return self._weight
 
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, ShipmentParameters):
-            return super().__eq__(other) \
-                   and self._weight == other.weight
-
-        return False
-
-    def __hash__(self):
-        return hash((self.length, self.width, self.height, self.weight))
-
-    def __str__(self):
-        return f'Shipment: ({self.length}, {self.width}, {self.height}, {self.weight})'
+    def _key(self):
+        return self.length, self.width, self.height, self.weight

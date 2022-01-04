@@ -1,15 +1,15 @@
-from src.container.iterator.container_iterator import ContainerIterator
+import numpy as np
+
+from src.iterator.space_iterator import SpaceIterator
 from src.point import Point
 
 
-class CornerContainerIterator(ContainerIterator):
-    def __init__(self, space):
-        super().__init__(space)
-        self._current_point = Point(0, 0, 0)
+START_POINT = Point(0, 0, 0)
 
-    def __next__(self) -> Point:
-        self._current_point =  self._compute_next_point()
-        return self._current_point
+
+class CornerSpaceIterator(SpaceIterator):
+    def __init__(self, space: np.array):
+        super().__init__(space, START_POINT)
 
     def _compute_next_point(self) -> Point:
         if self._current_point.x < self._space.shape[0] - 1:

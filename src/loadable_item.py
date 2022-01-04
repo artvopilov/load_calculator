@@ -1,27 +1,39 @@
 from abc import ABC, abstractmethod
 
 
-class LoadParameters(ABC):
+class LoadableItem(ABC):
+    _id_: int
     _length: int
     _width: int
     _height: int
+    _weight: int
 
-    def __init__(self, length: int, width: int, height: int):
+    def __init__(self,  id_: int, length: int, width: int, height: int, weight: int):
+        self._id_ = id_
         self._length = length
         self._width = width
         self._height = height
+        self._weight = weight
 
     @property
-    def length(self):
+    def id(self) -> int:
+        return self._id_
+
+    @property
+    def length(self) -> int:
         return self._length
 
     @property
-    def width(self):
+    def width(self) -> int:
         return self._width
 
     @property
-    def height(self):
+    def height(self) -> int:
         return self._height
+
+    @property
+    def weight(self) -> int:
+        return self._weight
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -34,3 +46,8 @@ class LoadParameters(ABC):
     @abstractmethod
     def _key(self):
         ...
+
+    @abstractmethod
+    def __str__(self):
+        ...
+

@@ -1,11 +1,11 @@
 from loader import Loader
 from parameters.container_parameters import ContainerParameters
-from parameters.shipment_parameters import ShipmentParameters
+from parameters.load_parameters import LoadParameters
 from parameters.pallet_parameters import PalletParameters
 
 
 CONTAINER_PARAMETERS = ContainerParameters(10000, 2000, 4000, 100)
-SHIPMENT_COUNTS = {ShipmentParameters(1000, 500, 500, 2): 10, ShipmentParameters(1000, 1000, 1000, 200): 1}
+SHIPMENT_COUNTS = {LoadParameters(1000, 500, 500, 2): 10, LoadParameters(1000, 1000, 1000, 200): 1}
 PALLET_PARAMETERS = PalletParameters(1000, 1000, 100, 20)
 
 

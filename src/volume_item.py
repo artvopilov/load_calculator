@@ -1,19 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
+
+from src.parameters.volume_parameters import VolumeParameters
 
 
-class LoadableItem(ABC):
+class VolumeItem(ABC):
     _id_: int
-    _length: int
-    _width: int
-    _height: int
-    _weight: int
 
-    def __init__(self,  id_: int, length: int, width: int, height: int, weight: int):
+    def __init__(self,  id_: int):
         self._id_ = id_
-        self._length = length
-        self._width = width
-        self._height = height
-        self._weight = weight
 
     @property
     def id(self) -> int:
@@ -21,19 +16,15 @@ class LoadableItem(ABC):
 
     @property
     def length(self) -> int:
-        return self._length
+        return self._get_parameters().length
 
     @property
     def width(self) -> int:
-        return self._width
+        return self._get_parameters().width
 
     @property
     def height(self) -> int:
-        return self._height
-
-    @property
-    def weight(self) -> int:
-        return self._weight
+        return self._get_parameters().height
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -44,10 +35,14 @@ class LoadableItem(ABC):
         return hash(self._key())
 
     @abstractmethod
-    def _key(self):
+    def _key(self) -> Tuple:
         ...
 
     @abstractmethod
-    def __str__(self):
+    def _get_parameters(self) -> VolumeParameters:
+        ...
+
+    @abstractmethod
+    def __str__(self) -> str:
         ...
 

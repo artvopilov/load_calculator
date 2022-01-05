@@ -1,20 +1,26 @@
+from typing import Tuple
+
+from src.parameters.volume_parameters import VolumeParameters
 from src.parameters.shipment_parameters import ShipmentParameters
-from src.loadable_item import LoadableItem
+from src.volume_item import VolumeItem
 
 
-class Shipment(LoadableItem):
+class Shipment(VolumeItem):
+    _parameters: ShipmentParameters
+
     def __init__(self, parameters: ShipmentParameters, id_: int):
-        super(Shipment, self).__init__(
-            id_,
-            parameters.length,
-            parameters.width,
-            parameters.height,
-            parameters.weight)
+        super().__init__(id_)
+        self._parameters = parameters
 
-    def _key(self):
+    @property
+    def weight(self) -> int:
+        return self._parameters.weight
+
+    def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.weight
 
-    def __str__(self):
+    def _get_parameters(self) -> VolumeParameters:
+        return self._parameters
+
+    def __str__(self) -> str:
         return f'Shipment: ({self._key()})'
-
-

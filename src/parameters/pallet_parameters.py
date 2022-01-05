@@ -1,7 +1,7 @@
-from src.parameters.load_parameters import LoadParameters
+from src.parameters.volume_parameters import VolumeParameters
 
 
-class PalletParameters(LoadParameters):
+class PalletParameters(VolumeParameters):
     _weight: int
     _lifting_capacity: int
 
@@ -11,12 +11,9 @@ class PalletParameters(LoadParameters):
         self._lifting_capacity = lifting_capacity
 
     @property
-    def weight(self):
+    def weight(self) -> int:
         return self._weight
 
     @property
-    def lifting_capacity(self):
+    def lifting_capacity(self) -> int:
         return self._lifting_capacity
-
-    def _key(self):
-        return self.length, self.width, self.height, self.weight, self.lifting_capacity

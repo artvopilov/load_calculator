@@ -1,29 +1,48 @@
-from typing import Optional
+from typing import Optional, Dict, Tuple
 
 import numpy as np
 
 from src.iterator.corner_space_iterator import CornerSpaceIterator
-from src.parameters.container_parameters import ContainerParameters
-from src.parameters.shipment_parameters import ShipmentParameters
 from src.pallet import Pallet
-from src.shipment import Shipment
+from src.parameters.container_parameters import ContainerParameters
+from src.parameters.volume_parameters import VolumeParameters
 from src.point import Point
+from src.shipment import Shipment
+from src.volume_item import VolumeItem
 
 
-class Container:
-    def __init__(self, container_parameters: ContainerParameters):
-        self._space = np.zeros((container_parameters.length, container_parameters.width, container_parameters.height))
-        self._lifting_capacity = container_parameters.lifting_capacity
+class Container(VolumeItem):
+    _parameters: ContainerParameters
+    _space: np.array
+    _lifting_capacity: int
+    _id_to_shipment: Dict[int, Shipment]
+    _id_to_pallet: Dict[int, Pallet]
 
-        self._point_to_shipment = {}
+    def __init__(self, parameters: ContainerParameters, id_: int):
+        super().__init__(id_)
+        self._parameters = parameters
+        self._space = np.zeros((parameters.length, parameters.width, parameters.height))
+        self._lifting_capacity = parameters.lifting_capacity
+        self._id_to_shipment = {}
 
-    def __str__(self):
-        return '\n'.join(f'point: {p}, shipment: {s}' for p, s in self._point_to_shipment.items())
+    @property
+    def lifting_capacity(self) -> int:
+        return self._parameters.lifting_capacity
+
+    def _key(self) -> Tuple:
+        return self.id, self.length, self.width, self.height, self.lifting_capacity
+
+    def _get_parameters(self) -> VolumeParameters:
+        return self._parameters
+
+    def __str__(self) -> str:
+        return f'Container: ({self._key()})'
 
     def try_load_pallet(self, pallet: Pallet) -> bool:
-        pass
+        pallet_surface = self._space[:, :, :1]
 
-    def try_load_shipment(self, shipment: ShipmentParameters) -> bool:
+
+    def try_load_shipment(self, shipment: Shipment) -> bool:
         loading_point = self._find_loading_point(shipment)
         print(f'Container loading point: {loading_point}')
         if loading_point is None:
@@ -34,10 +53,10 @@ class Container:
 
     def unload(self) -> None:
         self._space.fill(0)
-        self._point_to_shipment = {}
+        self._id_to_shipment = {}
 
-    def _find_loading_point(self, shipment: ShipmentParameters) -> Optional[Point]:
-        if not self._is_shipment_holdable(shipment.weight):
+    def _find_loading_point(self, shipment: Shipment) -> Optional[Point]:
+        if not self._is_holdable(shipment.weight):
             return None
 
         for point in CornerSpaceIterator(self._space):
@@ -46,27 +65,26 @@ class Container:
 
         return None
 
-    def _load(self, point: Point, shipment: ShipmentParameters) -> None:
+    def _load(self, point: Point, shipment: Shipment) -> None:
         x_upper = point.x + shipment.length
         y_upper = point.y + shipment.width
         z_upper = point.z + shipment.height
 
-        self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] = 1
-        self._point_to_shipment[point] = shipment
+        self._space[point.x:x_upper, point.y:y_upper, point.z:z_upper] = shipment.id
+        self._id_to_shipment[shipment.id] = shipment
 
-    def _is_shipment_holdable(self, shipment_weight: int) -> bool:
-        total_weight = sum([s.weight for s in self._point_to_shipment.values()])
-        if total_weight + shipment_weight > self._lifting_capacity:
+    def _is_holdable(self, item_weight: int) -> bool:
+        loaded_shipment_weight = sum([s.weight for s in self._id_to_shipment.values()])
+        loaded_pallet_weight = sum([p.weight for p in self._id_to_pallet.values()])
+        if loaded_shipment_weight + loaded_pallet_weight + item_weight > self._lifting_capacity:
             return False
         return True
 
     def _get_space_iterator(self):
         pass
 
-    def _point_fits(self, point: Point, shipment: ShipmentParameters) -> bool:
-        max_point = Point(point.x + shipment.length - 1,
-                          point.y + shipment.width - 1,
-                          point.z + shipment.height - 1)
+    def _point_fits(self, point: Point, item: VolumeItem) -> bool:
+        max_point = Point(point.x + item.length - 1, point.y + item.width - 1, point.z + item.height - 1)
 
         if not self._is_shipment_inside_container(point, max_point):
             return False

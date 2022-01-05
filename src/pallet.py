@@ -1,28 +1,30 @@
+from typing import Tuple
+
 from src.parameters.pallet_parameters import PalletParameters
-from src.loadable_item import LoadableItem
+from src.parameters.volume_parameters import VolumeParameters
+from src.volume_item import VolumeItem
 
 
-class Pallet(LoadableItem):
-    _lifting_capacity: int
+class Pallet(VolumeItem):
+    _parameters: PalletParameters
 
     def __init__(self, parameters: PalletParameters, id_: int):
-        super(Pallet, self).__init__(
-            id_,
-            parameters.length,
-            parameters.width,
-            parameters.height,
-            parameters.weight)
-        _lifting_capacity = parameters.lifting_capacity
+        super().__init__(id_)
+        self._parameters = parameters
+
+    @property
+    def weight(self) -> int:
+        return self._parameters.weight
 
     @property
     def lifting_capacity(self) -> int:
-        return self._lifting_capacity
+        return self._parameters.lifting_capacity
 
-    def _key(self):
+    def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.weight, self.lifting_capacity
 
-    def __str__(self):
+    def _get_parameters(self) -> VolumeParameters:
+        return self._parameters
+
+    def __str__(self) -> str:
         return f'Pallet: ({self._key()})'
-
-
-

@@ -1,7 +1,7 @@
-from src.parameters.load_parameters import LoadParameters
+from src.parameters.volume_parameters import VolumeParameters
 
 
-class ContainerParameters(LoadParameters):
+class ContainerParameters(VolumeParameters):
     _lifting_capacity: int
 
     def __init__(self, length: int, width: int, height: int, lifting_capacity: int) -> None:
@@ -9,8 +9,5 @@ class ContainerParameters(LoadParameters):
         self._lifting_capacity = lifting_capacity
 
     @property
-    def lifting_capacity(self):
+    def lifting_capacity(self) -> int:
         return self._lifting_capacity
-
-    def _key(self):
-        return self.length, self.width, self.height, self.lifting_capacity

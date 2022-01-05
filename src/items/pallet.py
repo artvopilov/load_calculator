@@ -2,7 +2,7 @@ from typing import Tuple
 
 from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.volume_parameters import VolumeParameters
-from src.volume_item import VolumeItem
+from src.items.volume_item import VolumeItem
 
 
 class Pallet(VolumeItem):

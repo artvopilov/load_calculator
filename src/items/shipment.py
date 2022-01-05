@@ -2,7 +2,7 @@ from typing import Tuple
 
 from src.parameters.volume_parameters import VolumeParameters
 from src.parameters.shipment_parameters import ShipmentParameters
-from src.volume_item import VolumeItem
+from src.items.volume_item import VolumeItem
 
 
 class Shipment(VolumeItem):

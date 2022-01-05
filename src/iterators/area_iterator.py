@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from src.point import Point
 
 
-class SpaceIterator(ABC):
+class AreaIterator(ABC):
     _space: np.array
     _current_point: Point
 

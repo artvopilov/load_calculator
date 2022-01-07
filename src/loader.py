@@ -61,23 +61,22 @@ class Loader:
     def _load_shipment(self, shipment: Shipment) -> bool:
         if self._load_into_existing_container(shipment):
             return True
-        if self._load_into_new_container(shipment):
+        if self._create_container_and_load(shipment):
             return True
 
         return False
 
     def _load_into_existing_container(self, shipment: Shipment) -> bool:
         for container in self._containers:
-            if container.try_load_shipment(shipment):
+            if container.load_shipment_if_fits(shipment):
                 return True
         return False
 
-    def _load_into_new_container(self, shipment: Shipment) -> bool:
+    def _create_container_and_load(self, shipment: Shipment) -> bool:
         container = self._create_container_with_pallets()
 
-        if container.try_load_shipment(shipment):
+        if container.load_shipment_if_fits(shipment):
             self._containers.append(container)
-            print('loaded in new')
             return True
         return False
 

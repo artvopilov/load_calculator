@@ -9,6 +9,7 @@ from src.iterators.corner_free_space_iterator import CornerFreeSpaceIterator
 from src.iterators.corner_free_space_max_height_iterator import CornerFreeSpaceMaxHeightIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.volume_parameters import VolumeParameters
+from src.parameters.pallet_parameters import PalletParameters
 from src.point import Point
 
 
@@ -64,7 +65,7 @@ class Container(VolumeItem):
 
         for point in self._get_space_iterator():
             max_point = self._compute_max_point(point, shipment)
-            if self._volume_fits(point, max_point):
+            if self._volume_fits(point, max_point) and self.weight_fits_pallet(point, max_point, shipment.weight):
                 self._load_shipment(point, max_point, shipment)
                 return True
 
@@ -74,6 +75,20 @@ class Container(VolumeItem):
         self._space.fill(0)
         self._id_to_shipment = {}
         self._id_to_pallet = {}
+
+    def compute_max_pallets_count(self, pallet_parameters: PalletParameters) -> int:
+        max_volume_count = self._compute_max_volume_count(pallet_parameters, pallet_parameters.height)
+        max_weight_count = self._compute_max_weight_count(pallet_parameters.weight)
+        return min(max_volume_count, max_weight_count)
+
+    def _compute_max_volume_count(self, volume_parameters: VolumeParameters, max_height: int) -> int:
+        max_count_x = self.length // volume_parameters.length
+        max_count_y = self.width // volume_parameters.width
+        max_count_z = min(self.height, max_height) // volume_parameters.height
+        return max_count_x * max_count_y * max_count_z
+
+    def _compute_max_weight_count(self, weight: int) -> int:
+        return self.lifting_capacity // weight
 
     def _get_floor_iterator(self) -> CornerFreeSpaceMaxHeightIterator:
         return CornerFreeSpaceMaxHeightIterator(self._space, 0)

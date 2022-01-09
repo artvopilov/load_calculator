@@ -1,3 +1,5 @@
+from typing import List
+
 from src.parameters.volume_parameters import VolumeParameters
 
 
@@ -17,3 +19,9 @@ class PalletParameters(VolumeParameters):
     @property
     def lifting_capacity(self) -> int:
         return self._lifting_capacity
+
+    def swap_length_width(self) -> List['PalletParameters']:
+        parameters = []
+        for p in super().swap_length_width():
+            parameters.append(PalletParameters(p.length, p.width, p.height, self.weight, self.lifting_capacity))
+        return parameters

@@ -1,4 +1,4 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 
 from parameters.container_parameters import ContainerParameters
 from parameters.pallet_parameters import PalletParameters
@@ -13,7 +13,7 @@ from src.point import Point
 class Loader:
     _container_parameters: ContainerParameters
     _shipments_counts: Dict[ShipmentParameters, int]
-    _pallet_parameters: PalletParameters
+    _pallet_parameters: Optional[PalletParameters]
     _load_item_fabric: ItemFabric
     _containers: List[Container]
     _non_loadable_shipments: Set[ShipmentParameters]
@@ -21,7 +21,7 @@ class Loader:
     def __init__(self,
                  container_parameters: ContainerParameters,
                  shipments_counts: Dict[ShipmentParameters, int],
-                 pallet_parameters: PalletParameters,
+                 pallet_parameters: Optional[PalletParameters],
                  load_item_fabric: ItemFabric):
         self._container_parameters = container_parameters
         self._shipments_counts = shipments_counts
@@ -86,7 +86,24 @@ class Loader:
         return container
 
     def _load_pallets(self, container: Container) -> None:
-        loading = False if not self._pallet_parameters else True
+        if not self._pallet_parameters:
+            return
+
+        pallet_parameters = self._optimize_pallet_parameters(container)
+        loading = True
         while loading:
-            pallet = self._load_item_fabric.create_pallet(self._pallet_parameters)
+            pallet = self._load_item_fabric.create_pallet(pallet_parameters)
             loading = container.load_pallet_if_fits(pallet)
+
+    def _optimize_pallet_parameters(self, container: Container) -> PalletParameters:
+        swapped_pallet_parameters = self._pallet_parameters.swap_length_width()
+
+        max_pallets_count = 0
+        optimized_pallet_parameters = None
+        for p in swapped_pallet_parameters:
+            pallets_count = container.compute_max_pallets_count(p)
+            if pallets_count > max_pallets_count:
+                max_pallets_count = pallets_count
+                optimized_pallet_parameters = p
+
+        return optimized_pallet_parameters

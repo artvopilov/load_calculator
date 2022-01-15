@@ -16,6 +16,10 @@ class Shipment(VolumeItem):
     def weight(self) -> int:
         return self._parameters.weight
 
+    def compute_part_weight(self, volume: int) -> float:
+        shipment_part = volume / self.compute_volume()
+        return shipment_part * self.weight
+
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.weight
 

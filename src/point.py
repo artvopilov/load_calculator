@@ -4,6 +4,9 @@ class Point:
         self._y = y
         self._z = z
 
+    def with_height(self, height: int) -> 'Point':
+        return Point(self.x, self.y, height)
+
     @property
     def x(self):
         return self._x

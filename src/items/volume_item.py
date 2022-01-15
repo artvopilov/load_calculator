@@ -26,6 +26,9 @@ class VolumeItem(ABC):
     def height(self) -> int:
         return self._get_parameters().height
 
+    def compute_volume(self) -> int:
+        return self.length * self.width * self.height
+
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self._key() == other._key()

@@ -1,16 +1,18 @@
+from item_fabric import ItemFabric
 from loader import Loader
 from parameters.container_parameters import ContainerParameters
-from parameters.shipment_parameters import ShipmentParameters
 from parameters.pallet_parameters import PalletParameters
-from item_fabric import ItemFabric
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
+from parameters.shipment_parameters import ShipmentParameters
+from src.image_3d_creator import Image3dCreator
+from src.point import Point
 
 CONTAINER_PARAMETERS = ContainerParameters(10000, 2000, 4000, 100)
 SHIPMENT_COUNTS = {ShipmentParameters(1000, 500, 500, 2): 10, ShipmentParameters(1000, 1000, 1000, 200): 1}
 PALLET_PARAMETERS = PalletParameters(1000, 1000, 100, 20, 20)
+
+POSITIONS = [Point(0, 0, 0), Point(10, 0, 5)]
+SIZES = [Point(1, 1, 1), Point(2, 6, 4)]
+COLORS = ['b', 'r']
 
 
 def test_loading():
@@ -29,29 +31,8 @@ def test_loading():
 
 
 def test_3d_plotting_cube():
-    # prepare some coordinates
-    x, y, z = np.indices((8, 8, 10))
-
-    # draw cuboids in the top left and bottom right corners, and a link between them
-    cube1 = (x < 3) & (y < 1) & (z < 2)
-    cube2 = (x >= 6) & (y >= 6) & (z >= 6) & (z <= 8)
-    cube3 = (x >= 4) & (x <= 5) & (y >= 3) & (y <= 5) & (z >= 4) & (z <= 5)
-
-    # combine the objects into a single boolean array
-    voxels = cube1 | cube2 | cube3
-
-    # set the colors of each object
-    colors = np.empty(voxels.shape, dtype=object)
-    colors[cube3] = 'red'
-    colors[cube1] = 'blue'
-    colors[cube2] = 'green'
-
-    # and plot everything
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.voxels(voxels, facecolors=colors, edgecolor='k')
-
-    plt.show()
+    image_3d_creator = Image3dCreator()
+    image_3d_creator.create(POSITIONS, SIZES, COLORS)
 
 
 if __name__ == '__main__':

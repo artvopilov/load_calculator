@@ -13,9 +13,14 @@ class CornerFreeSpaceIterator(SpaceIterator):
     _current_point_ind: int
 
     def __init__(self, space: np.array):
+        super().__init__()
         zero_space = np.argwhere(space == 0)
         sorted_zero_space = np.lexsort((zero_space[:, 2], zero_space[:, 1], zero_space[:, 0]))
-        self._points = list(map(lambda p: Point(p[0], p[1], p[2]), sorted_zero_space))
+
+        self._points = []
+        for p_i in sorted_zero_space:
+            p = zero_space[p_i]
+            self._points.append(Point(p[0], p[1], p[2]))
 
     def _compute_start_point(self) -> Point:
         if len(self._points) != 0:

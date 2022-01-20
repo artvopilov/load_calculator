@@ -10,6 +10,7 @@ class CornerSpaceIterator(SpaceIterator):
     _space: np.array
 
     def __init__(self, space: np.array):
+        super().__init__()
         self._space = space
 
     def _compute_start_point(self) -> Point:

@@ -6,9 +6,9 @@ from parameters.shipment_parameters import ShipmentParameters
 from src.image_3d_creator import Image3dCreator
 from src.point import Point
 
-CONTAINER_PARAMETERS = ContainerParameters(10000, 2000, 4000, 100)
-SHIPMENT_COUNTS = {ShipmentParameters(1000, 500, 500, 2): 10, ShipmentParameters(1000, 1000, 1000, 200): 1}
-PALLET_PARAMETERS = PalletParameters(1000, 1000, 100, 20, 20)
+CONTAINER_PARAMETERS = ContainerParameters(20, 20, 20, 100)
+SHIPMENT_COUNTS = {ShipmentParameters(2, 2, 1, 2, 'b'): 10, ShipmentParameters(10, 10, 2, 10, 'r'): 1}
+PALLET_PARAMETERS = PalletParameters(5, 5, 1, 20, 20, 'g')
 
 POSITIONS = [Point(0, 0, 0), Point(10, 0, 5), Point(12, 0, 5)]
 SIZES = [Point(3, 3, 3), Point(2, 6, 4), Point(6, 6, 1)]
@@ -24,16 +24,19 @@ def test_loading():
     containers = loader.containers
     non_loadable_shipments = loader.non_loadable_shipments
 
+    image_3d_creator = Image3dCreator()
     for container in containers:
         print(container)
+        image_3d_creator.create(container)
     for shipment in non_loadable_shipments:
         print(shipment)
 
 
 def test_3d_plotting_cube():
-    image_3d_creator = Image3dCreator()
-    image_3d_creator.create(POSITIONS, SIZES, COLORS)
+    pass
+    # image_3d_creator = Image3dCreator()
+    # image_3d_creator.create(POSITIONS, SIZES, COLORS)
 
 
 if __name__ == '__main__':
-    test_3d_plotting_cube()
+    test_loading()

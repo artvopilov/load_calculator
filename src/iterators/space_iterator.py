@@ -1,10 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from src.point import Point
 
 
 class SpaceIterator(ABC):
-    _current_point: Point
+    _current_point: Optional[Point]
+
+    def __init__(self):
+        self._current_point = None
 
     def __iter__(self):
         return self

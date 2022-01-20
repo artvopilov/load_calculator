@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-from src.parameters.volume_parameters import VolumeParameters
 
-
-class VolumeItem(ABC):
+class Item(ABC):
     _id_: int
 
     def __init__(self,  id_: int):
@@ -13,21 +11,6 @@ class VolumeItem(ABC):
     @property
     def id(self) -> int:
         return self._id_
-
-    @property
-    def length(self) -> int:
-        return self._get_parameters().length
-
-    @property
-    def width(self) -> int:
-        return self._get_parameters().width
-
-    @property
-    def height(self) -> int:
-        return self._get_parameters().height
-
-    def compute_volume(self) -> int:
-        return self.length * self.width * self.height
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -39,10 +22,6 @@ class VolumeItem(ABC):
 
     @abstractmethod
     def _key(self) -> Tuple:
-        ...
-
-    @abstractmethod
-    def _get_parameters(self) -> VolumeParameters:
         ...
 
     @abstractmethod

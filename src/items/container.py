@@ -2,9 +2,9 @@ from typing import Dict, Tuple
 
 import numpy as np
 
+from src.items.item import Item
 from src.items.pallet import Pallet
 from src.items.shipment import Shipment
-from src.items.volume_item import VolumeItem
 from src.iterators.corner_free_space_iterator import CornerFreeSpaceIterator
 from src.iterators.corner_free_space_max_height_iterator import CornerFreeSpaceMaxHeightIterator
 from src.parameters.container_parameters import ContainerParameters
@@ -13,7 +13,7 @@ from src.parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 
-class Container(VolumeItem):
+class Container(Item):
     _parameters: ContainerParameters
     _space: np.array
 
@@ -27,7 +27,7 @@ class Container(VolumeItem):
     def __init__(self, parameters: ContainerParameters, id_: int):
         super().__init__(id_)
         self._parameters = parameters
-        self._space = np.zeros((parameters.length, parameters.width, parameters.height))
+        self._space = np.zeros((parameters.length, parameters.width, parameters.height), dtype=np.int32)
 
         self._id_to_shipment = {}
         self._id_to_pallet = {}
@@ -37,14 +37,39 @@ class Container(VolumeItem):
         self._pallet_id_to_loaded_weight = {}
 
     @property
+    def length(self) -> int:
+        return self._parameters.length
+
+    @property
+    def width(self) -> int:
+        return self._parameters.width
+
+    @property
+    def height(self) -> int:
+        return self._parameters.height
+
+    @property
     def lifting_capacity(self) -> int:
         return self._parameters.lifting_capacity
 
+    @property
+    def parameters(self):
+        return self._parameters
+
+    @property
+    def id_to_min_point(self):
+        return self._id_to_min_point
+
+    @property
+    def id_to_shipment(self):
+        return self._id_to_shipment
+
+    @property
+    def id_to_pallet(self):
+        return self._id_to_pallet
+
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
-
-    def _get_parameters(self) -> VolumeParameters:
-        return self._parameters
 
     def __str__(self) -> str:
         return f'Container: ({self._key()})'
@@ -54,7 +79,7 @@ class Container(VolumeItem):
             return False
 
         for point in self._get_floor_iterator():
-            max_point = self._compute_max_point(point, pallet)
+            max_point = self._compute_max_point(point, pallet.parameters)
             if self._volume_fits(point, max_point):
                 self._load_pallet(point, max_point, pallet)
                 return True
@@ -66,7 +91,7 @@ class Container(VolumeItem):
             return False
 
         for point in self._get_space_iterator():
-            max_point = self._compute_max_point(point, shipment)
+            max_point = self._compute_max_point(point, shipment.parameters)
             if not self._volume_fits(point, max_point):
                 continue
             pallet_id_to_loading_weight = self._compute_pallet_id_to_loading_weight(point, max_point, shipment.weight)
@@ -158,7 +183,7 @@ class Container(VolumeItem):
 
     def _compute_pallet_load_space(self, pallet: Pallet) -> np.array:
         min_point = self._id_to_min_point[pallet.id]
-        max_point = self._compute_max_point(min_point, pallet)
+        max_point = self._compute_max_point(min_point, pallet.parameters)
         return self._get_sub_space(min_point.with_height(max_point.z + 1), max_point.with_height(self.height))
 
     def _compute_space_loaded_weight(self, load_space: np.array) -> float:
@@ -202,5 +227,8 @@ class Container(VolumeItem):
         return self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]
 
     @staticmethod
-    def _compute_max_point(point: Point, item: VolumeItem) -> Point:
-        return Point(point.x + item.length - 1, point.y + item.width - 1, point.z + item.height - 1)
+    def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:
+        return Point(
+            point.x + volume_parameters.length - 1,
+            point.y + volume_parameters.width - 1,
+            point.z + volume_parameters.height - 1)

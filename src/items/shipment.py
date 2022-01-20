@@ -2,10 +2,10 @@ from typing import Tuple
 
 from src.parameters.volume_parameters import VolumeParameters
 from src.parameters.shipment_parameters import ShipmentParameters
-from src.items.volume_item import VolumeItem
+from src.items.color_volume_item import ColorVolumeItem
 
 
-class Shipment(VolumeItem):
+class Shipment(ColorVolumeItem):
     _parameters: ShipmentParameters
 
     def __init__(self, parameters: ShipmentParameters, id_: int):

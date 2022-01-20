@@ -1,53 +1,68 @@
-from typing import List
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from src.point import Point
 
 
 class Image3dCreator:
-    POLYGONS = [[[0, 1, 0], [0, 0, 0], [1, 0, 0], [1, 1, 0]],
-                [[0, 0, 0], [0, 0, 1], [1, 0, 1], [1, 0, 0]],
-                [[1, 0, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1]],
-                [[0, 0, 1], [0, 0, 0], [0, 1, 0], [0, 1, 1]],
-                [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]],
-                [[0, 1, 1], [0, 0, 1], [1, 0, 1], [1, 1, 1]]]
+    X = [
+            [0, 0, 0, 0],
+            [0, 1, 1, 0],
+            [0, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+    ]
+    Y = [
+            [0, 0, 1, 1],
+            [0, 0, 1, 1],
+            [0, 0, 1, 1],
+            [0, 0, 1, 1],
+            [0, 0, 1, 1]
+    ]
+    Z = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0]
+    ]
 
     def create(self, positions: List[Point], sizes: List[Point], colors=List[str]) -> None:
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_aspect('equal')
 
-        cubes_collections = self._create_cubes_collection(positions, sizes, colors)
-        ax.add_collection3d(cubes_collections)
+        self._plot_cubes(ax, positions, sizes, colors)
 
-        # ax.set_xlabel('X')
         ax.set_xlim(0, 20)
-        # ax.set_ylabel('Y')
         ax.set_ylim(0, 20)
-        # ax.set_zlabel('Z')
         ax.set_zlim(0, 20)
 
         plt.show()
 
-    def _create_cubes_collection(
-            self,
-            positions: List[Point],
-            sizes: List[Point],
-            colors=List[str]
-    ) -> Poly3DCollection:
-        cubes = [self._compute_cube_data(position, size) for position, size in zip(positions, sizes)]
-        return Poly3DCollection(np.concatenate(cubes), facecolors=np.repeat(colors, 6), edgecolor='k', alpha=0.1)
+    def _plot_cubes(self, ax: Axes3D, positions: List[Point], sizes: List[Point], colors=List[str]) -> None:
+        cubes_coordinates = [self._compute_cube_coordinates(position, size) for position, size in zip(positions, sizes)]
+        for cube_coordinates, color in zip(cubes_coordinates, colors):
+            ax.plot_surface(
+                cube_coordinates[0],
+                cube_coordinates[1],
+                cube_coordinates[2],
+                color=color,
+                rstride=1,
+                cstride=1,
+                edgecolor='k',
+                alpha=0.5)
 
-    def _compute_cube_data(self, point: Point, size: Point) -> np.array:
-        polygons = np.array(self.POLYGONS, dtype=float)
+    def _compute_cube_coordinates(self, position: Point, size: Point) -> Tuple:
+        x = np.array(self.X) * size.x
+        y = np.array(self.Y) * size.y
+        z = np.array(self.Z) * size.z
 
-        polygons[:, :, 0] *= size.x
-        polygons[:, :, 1] *= size.y
-        polygons[:, :, 2] *= size.z
+        x += position.x
+        y += position.y
+        y += position.z
 
-        polygons += np.array([point.x, point.y, point.z])
-        return polygons
+        return x, y, z

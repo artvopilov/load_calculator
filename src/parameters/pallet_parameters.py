@@ -1,14 +1,14 @@
 from typing import List
 
-from src.parameters.volume_parameters import VolumeParameters
+from src.parameters.color_volume_parameters import ColorVolumeParameters
 
 
-class PalletParameters(VolumeParameters):
+class PalletParameters(ColorVolumeParameters):
     _weight: int
     _lifting_capacity: int
 
-    def __init__(self, length: int, width: int, height: int, weight: int, lifting_capacity: int) -> None:
-        super().__init__(length, width, height)
+    def __init__(self, length: int, width: int, height: int, color: str, weight: int, lifting_capacity: int) -> None:
+        super().__init__(length, width, height, color)
         self._weight = weight
         self._lifting_capacity = lifting_capacity
 

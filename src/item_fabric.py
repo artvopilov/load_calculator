@@ -1,6 +1,6 @@
 from src.items.pallet import Pallet
 from src.items.shipment import Shipment
-from src.container import Container
+from src.items.container import Container
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.shipment_parameters import ShipmentParameters

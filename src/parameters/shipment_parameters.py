@@ -1,12 +1,13 @@
-from src.parameters.volume_parameters import VolumeParameters
 from typing import Tuple
 
+from src.parameters.color_volume_parameters import ColorVolumeParameters
 
-class ShipmentParameters(VolumeParameters):
+
+class ShipmentParameters(ColorVolumeParameters):
     _weight: int
 
-    def __init__(self, length: int, width: int, height: int, weight: int) -> None:
-        super().__init__(length, width, height)
+    def __init__(self, length: int, width: int, height: int, color: str, weight: int) -> None:
+        super().__init__(length, width, height, color)
         self._weight = weight
 
     @property

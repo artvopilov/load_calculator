@@ -1,11 +1,11 @@
 from typing import Tuple
 
+from src.items.color_volume_item import ColorVolumeItem
 from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.volume_parameters import VolumeParameters
-from src.items.volume_item import VolumeItem
 
 
-class Pallet(VolumeItem):
+class Pallet(ColorVolumeItem):
     _parameters: PalletParameters
 
     def __init__(self, parameters: PalletParameters, id_: int):

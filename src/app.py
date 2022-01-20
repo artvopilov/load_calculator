@@ -10,9 +10,9 @@ CONTAINER_PARAMETERS = ContainerParameters(10000, 2000, 4000, 100)
 SHIPMENT_COUNTS = {ShipmentParameters(1000, 500, 500, 2): 10, ShipmentParameters(1000, 1000, 1000, 200): 1}
 PALLET_PARAMETERS = PalletParameters(1000, 1000, 100, 20, 20)
 
-POSITIONS = [Point(0, 0, 0), Point(10, 0, 5)]
-SIZES = [Point(1, 1, 1), Point(2, 6, 4)]
-COLORS = ['b', 'r']
+POSITIONS = [Point(0, 0, 0), Point(10, 0, 5), Point(12, 0, 5)]
+SIZES = [Point(3, 3, 3), Point(2, 6, 4), Point(6, 6, 1)]
+COLORS = ['b', 'r', 'r']
 
 
 def test_loading():

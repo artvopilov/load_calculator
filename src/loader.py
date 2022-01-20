@@ -3,11 +3,9 @@ from typing import Dict, List, Set, Optional
 from parameters.container_parameters import ContainerParameters
 from parameters.pallet_parameters import PalletParameters
 from parameters.shipment_parameters import ShipmentParameters
-from src.container import Container
+from src.items.container import Container
 from src.item_fabric import ItemFabric
 from src.items.shipment import Shipment
-from src.items.pallet import Pallet
-from src.point import Point
 
 
 class Loader:

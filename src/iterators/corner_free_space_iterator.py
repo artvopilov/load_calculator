@@ -15,11 +15,15 @@ class CornerFreeSpaceIterator(SpaceIterator):
     def __init__(self, space: np.array):
         super().__init__()
         zero_space = np.argwhere(space == 0)
-        sorted_zero_space = np.lexsort((zero_space[:, 2], zero_space[:, 1], zero_space[:, 0]))
+        sorted_zero_space = np.lexsort((zero_space[:, 0], zero_space[:, 1], zero_space[:, 2]))
+
+        # print(zero_space[:5])
 
         self._points = []
         for p_i in sorted_zero_space:
             p = zero_space[p_i]
+            # if len(self._points) < 10:
+            #     print(p)
             self._points.append(Point(p[0], p[1], p[2]))
 
     def _compute_start_point(self) -> Point:

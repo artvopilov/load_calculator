@@ -2,19 +2,21 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from src.items.item import Item
+from src.items.lifting_item import LiftingItem
 from src.items.pallet import Pallet
 from src.items.shipment import Shipment
+from src.items.volume_item import VolumeItem
 from src.iterators.corner_free_space_iterator import CornerFreeSpaceIterator
-from src.iterators.corner_free_space_max_height_iterator import CornerFreeSpaceMaxHeightIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 
-class Container(Item):
+class Container(VolumeItem, LiftingItem):
+    _id_: int
     _parameters: ContainerParameters
+
     _space: np.array
 
     _id_to_shipment: Dict[int, Shipment]
@@ -25,7 +27,7 @@ class Container(Item):
     _pallet_id_to_loaded_weight: Dict[int, float]
 
     def __init__(self, parameters: ContainerParameters, id_: int):
-        super().__init__(id_)
+        self._id_ = id_
         self._parameters = parameters
         self._space = np.zeros((parameters.length, parameters.width, parameters.height), dtype=np.int32)
 
@@ -35,6 +37,10 @@ class Container(Item):
         self._id_to_min_point = {}
 
         self._pallet_id_to_loaded_weight = {}
+
+    @property
+    def id(self) -> int:
+        return self._id_
 
     @property
     def length(self) -> int:
@@ -53,7 +59,7 @@ class Container(Item):
         return self._parameters.lifting_capacity
 
     @property
-    def parameters(self):
+    def parameters(self) -> ContainerParameters:
         return self._parameters
 
     @property
@@ -79,34 +85,56 @@ class Container(Item):
             return False
 
         for point in self._get_floor_iterator():
+            # print(f'Checking {point}')
             max_point = self._compute_max_point(point, pallet.parameters)
             if self._volume_fits(point, max_point):
                 self._load_pallet(point, max_point, pallet)
                 return True
 
+        # print(f'{pallet} does not fit')
         return False
 
     def load_shipment_if_fits(self, shipment: Shipment) -> bool:
         if not self._weight_fits_container(shipment.weight):
+            # print(f'{shipment} does not fit container weight')
             return False
 
         for point in self._get_space_iterator():
+            # print(f'Checking {point}')
             max_point = self._compute_max_point(point, shipment.parameters)
             if not self._volume_fits(point, max_point):
-                continue
+                # print('Volume does not fit')
+                # continue
+                break
             pallet_id_to_loading_weight = self._compute_pallet_id_to_loading_weight(point, max_point, shipment.weight)
             if not self.weight_fits_pallet(pallet_id_to_loading_weight):
+                # print('Pallet weight does not fit')
                 continue
 
             self._load_shipment(point, max_point, shipment, pallet_id_to_loading_weight)
             return True
 
+        # print('Not loaded')
         return False
 
     def unload(self) -> None:
         self._space.fill(0)
         self._id_to_shipment = {}
         self._id_to_pallet = {}
+
+    def unload_empty_pallets(self) -> None:
+        pallets = list(self._id_to_pallet.values())
+        for pallet in pallets:
+            if self._pallet_id_to_loaded_weight[pallet.id] == 0:
+                min_point = self._id_to_min_point[pallet.id]
+                max_point = self._compute_max_point(min_point, pallet.parameters)
+
+                pallet_space = self._get_sub_space(min_point, max_point)
+                pallet_space.fill(0)
+
+                self.id_to_pallet.pop(pallet.id)
+                self.id_to_min_point.pop(pallet.id)
+                self._pallet_id_to_loaded_weight.pop(pallet.id)
 
     def compute_max_pallets_count(self, pallet_parameters: PalletParameters) -> int:
         max_volume_count = self._compute_max_volume_count(pallet_parameters, pallet_parameters.height)
@@ -122,13 +150,15 @@ class Container(Item):
     def _compute_max_weight_count(self, weight: int) -> int:
         return self.lifting_capacity // weight
 
-    def _get_floor_iterator(self) -> CornerFreeSpaceMaxHeightIterator:
-        return CornerFreeSpaceMaxHeightIterator(self._space, 0)
+    def _get_floor_iterator(self) -> CornerFreeSpaceIterator:
+        return CornerFreeSpaceIterator(self._space[:, :, :1])
 
     def _get_space_iterator(self) -> CornerFreeSpaceIterator:
         return CornerFreeSpaceIterator(self._space)
 
     def _weight_fits_container(self, weight: int) -> bool:
+        # print(self._compute_loaded_weight())
+        # print(self.lifting_capacity)
         return self._compute_loaded_weight() + weight <= self.lifting_capacity
 
     def _volume_fits(self, point: Point, max_point: Point) -> bool:
@@ -151,6 +181,7 @@ class Container(Item):
     def _load_pallet(self, point: Point, max_point: Point, pallet: Pallet) -> None:
         self._load_into_space(point, max_point, pallet.id)
         self._id_to_pallet[pallet.id] = pallet
+        self._pallet_id_to_loaded_weight[pallet.id] = 0
 
     def _load_shipment(
             self,
@@ -203,7 +234,7 @@ class Container(Item):
         for id_, area in zip(pallet_ids, pallet_areas):
             if id_ not in self._id_to_pallet:
                 continue
-            weight_part = area / floor_surface.size()
+            weight_part = area / floor_surface.size
             pallet_id_to_loading_weight[id_] = weight_part * weight
         return pallet_id_to_loading_weight
 
@@ -216,14 +247,14 @@ class Container(Item):
         if min_point.z == 0:
             return True
 
-        surface = self._get_sub_space(min_point.with_height(min_point.z - 1), max_point.with_height(min_point.z))
+        surface = self._get_sub_space(min_point.with_height(min_point.z - 1), max_point.with_height(min_point.z - 1))
         return (surface != 0).all()
 
     def _is_sub_space_empty(self, min_point: Point, max_point: Point) -> bool:
         sub_space = self._get_sub_space(min_point, max_point)
         return (sub_space == 0).all()
 
-    def _get_sub_space(self, min_point: Point, max_point: Point):
+    def _get_sub_space(self, min_point: Point, max_point: Point) -> np.array:
         return self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]
 
     @staticmethod

@@ -1,15 +1,22 @@
 from typing import Tuple
 
-from src.items.item import Item
+from src.items.color_item import ColorItem
+from src.items.volume_item import VolumeItem
+from src.items.weight_item import WeightItem
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
-class Shipment(Item):
+class Shipment(VolumeItem, WeightItem, ColorItem):
+    _id_: int
     _parameters: ShipmentParameters
 
     def __init__(self, parameters: ShipmentParameters, id_: int):
-        super().__init__(id_)
+        self._id_ = id_
         self._parameters = parameters
+
+    @property
+    def id(self) -> int:
+        return self._id_
 
     @property
     def length(self) -> int:
@@ -32,7 +39,7 @@ class Shipment(Item):
         return self._parameters.color
 
     @property
-    def parameters(self):
+    def parameters(self) -> ShipmentParameters:
         return self._parameters
 
     def compute_part_weight(self, volume: int) -> float:
@@ -43,7 +50,7 @@ class Shipment(Item):
         return self.length * self.width * self.height
 
     def _key(self) -> Tuple:
-        return self.id, self.length, self.width, self.height, self.weight
+        return self.id, self.length, self.width, self.height, self.weight, self.color
 
     def __str__(self) -> str:
         return f'Shipment: ({self._key()})'

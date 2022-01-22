@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, TypeVar, Generic
 
 
-class Item(ABC):
-    _id_: int
+T = TypeVar('T')
 
-    def __init__(self,  id_: int):
-        self._id_ = id_
 
+class Item(ABC, Generic[T]):
     @property
+    @abstractmethod
     def id(self) -> int:
-        return self._id_
+        ...
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -19,6 +18,11 @@ class Item(ABC):
 
     def __hash__(self):
         return hash(self._key())
+
+    @property
+    @abstractmethod
+    def parameters(self) -> T:
+        ...
 
     @abstractmethod
     def _key(self) -> Tuple:

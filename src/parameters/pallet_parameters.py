@@ -37,7 +37,7 @@ class PalletParameters(VolumeParameters, WeightParameters, LiftingParameters, Co
 
     @property
     def weight(self) -> int:
-        return self._width
+        return self._weight
 
     @property
     def lifting_capacity(self) -> int:

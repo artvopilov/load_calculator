@@ -10,7 +10,7 @@ class ItemFabric:
     _current_id: int
 
     def __init__(self):
-        self._current_id = 0
+        self._current_id = 1
 
     def create_container(self, container_parameters: ContainerParameters):
         container = Container(container_parameters, self._current_id)

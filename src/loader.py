@@ -57,33 +57,26 @@ class Loader:
             for i in range(shipment_count):
                 shipment = self._load_item_fabric.create_shipment(shipment_parameters)
 
-                # print(f'Loading {shipment}')
-
                 if not self._load_shipment(shipment):
                     self._non_loadable_shipments.add(shipment_parameters)
                     break
 
-                # print('Loaded')
-
     def _load_shipment(self, shipment: Shipment) -> bool:
         if self._load_into_existing_container(shipment):
             return True
-        if self._create_container_and_load(shipment):
+        if self._load_into_new_container(shipment):
             return True
-
         return False
 
     def _load_into_existing_container(self, shipment: Shipment) -> bool:
-        # print(f'Loading {shipment}')
         for container in self._containers:
             if container.load_shipment_if_fits(shipment):
                 return True
         return False
 
-    def _create_container_and_load(self, shipment: Shipment) -> bool:
+    def _load_into_new_container(self, shipment: Shipment) -> bool:
         container = self._create_container_with_pallets()
 
-        # print(f'Loading {shipment}')
         if container.load_shipment_if_fits(shipment):
             self._containers.append(container)
             return True
@@ -98,25 +91,22 @@ class Loader:
         if not self._pallet_parameters:
             return
 
-        pallet_parameters = self._optimize_pallet_parameters(container)
+        pallet_parameters = self._choose_pallet_direction(container)
         loading = True
         while loading:
             pallet = self._load_item_fabric.create_pallet(pallet_parameters)
-            # print(f'Loading {pallet}')
             loading = container.load_pallet_if_fits(pallet)
-            # print(f'Loaded: {loading}')
 
-    def _optimize_pallet_parameters(self, container: Container) -> PalletParameters:
-        swapped_pallet_parameters = self._pallet_parameters.swap_length_width()
+    def _choose_pallet_direction(self, container: Container) -> PalletParameters:
+        pallet_directions = self._pallet_parameters.swap_length_width()
 
         max_pallets_count = 0
         optimized_pallet_parameters = None
-        for p in swapped_pallet_parameters:
-            pallets_count = container.compute_max_pallets_count(p)
+        for pallet_parameters in pallet_directions:
+            pallets_count = container.compute_max_pallets_count(pallet_parameters)
             if pallets_count > max_pallets_count:
                 max_pallets_count = pallets_count
-                optimized_pallet_parameters = p
-
+                optimized_pallet_parameters = pallet_parameters
         return optimized_pallet_parameters
 
     def _unload_empty_pallets(self):

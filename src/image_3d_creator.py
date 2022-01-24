@@ -62,14 +62,7 @@ class Image3dCreator:
             is_shipment = id_ in container.id_to_shipment
             item = container.id_to_shipment[id_] if is_shipment else container.id_to_pallet[id_]
 
-            # print(f'Plotting {item} on {point}')
-
             cube_coordinates = self._compute_cube_coordinates(point, item.parameters)
-
-            # print(f'Coordinates: {cube_coordinates}')
-
-            # if item.id == 13:
-            #     continue
 
             ax.plot_surface(
                 cube_coordinates[0],
@@ -100,6 +93,10 @@ class Image3dCreator:
             item = container.id_to_shipment[id_] if is_shipment else container.id_to_pallet[id_]
 
             cube = self._compute_cube_data(point, item.parameters)
+
+            # print(f'Plotting {item} on {cube}')
+            print(f'Plotting {item} on {point}')
+
             cubes.append(cube)
             colors.append(item.color)
 

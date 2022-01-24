@@ -1,45 +1,37 @@
-from typing import List
+from typing import Optional
 
 import numpy as np
 
 from src.iterators.space_iterator import SpaceIterator
 from src.point import Point
 
-START_POINT_IND = 0
-
 
 class CornerFreeSpaceIterator(SpaceIterator):
-    _points: List[Point]
-    _current_point_ind: int
+    _point_indices: np.array
+    _point_order: np.array
+    _order_index: int
 
     def __init__(self, space: np.array):
         super().__init__()
-        zero_space = np.argwhere(space == 0)
-        sorted_zero_space = np.lexsort((zero_space[:, 0], zero_space[:, 1], zero_space[:, 2]))
+        self._point_indices = np.argwhere(space == 0)
+        self._point_order = np.lexsort((
+            self._point_indices[:, 0],
+            self._point_indices[:, 1],
+            self._point_indices[:, 2]))
+        self._order_index = -1
 
-        # print(zero_space[:5])
+    def _compute_start_point(self) -> Optional[Point]:
+        return self._compute_next_point()
 
-        self._points = []
-        for p_i in sorted_zero_space:
-            p = zero_space[p_i]
-            # if len(self._points) < 10:
-            #     print(p)
-            self._points.append(Point(p[0], p[1], p[2]))
-
-    def _compute_start_point(self) -> Point:
-        if len(self._points) != 0:
-            self._current_point_ind = START_POINT_IND
-            return self._points[self._current_point_ind]
-        raise StopIteration
-
-    def _compute_next_point(self) -> Point:
+    def _compute_next_point(self) -> Optional[Point]:
         if self._has_next():
             return self._move()
-        raise StopIteration
+        return None
 
     def _has_next(self) -> bool:
-        return self._current_point_ind < len(self._points) - 1
+        return self._order_index < len(self._point_indices) - 1
 
     def _move(self) -> Point:
-        self._current_point_ind += 1
-        return self._points[self._current_point_ind]
+        self._order_index += 1
+        point_index = self._point_indices[self._point_order[self._order_index]]
+        return Point(point_index[0], point_index[1], point_index[2])

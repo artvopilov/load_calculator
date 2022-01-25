@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Optional
 
 import numpy as np
@@ -14,11 +15,12 @@ class CornerFreeSpaceIterator(SpaceIterator):
     def __init__(self, space: np.array):
         super().__init__()
         self._point_indices = np.argwhere(space == 0)
-        self._point_order = np.lexsort((
-            self._point_indices[:, 0],
-            self._point_indices[:, 1],
-            self._point_indices[:, 2]))
+        self._point_order = self._get_point_order()
         self._order_index = -1
+
+    @abstractmethod
+    def _get_point_order(self) -> np.array:
+        pass
 
     def _compute_start_point(self) -> Optional[Point]:
         return self._compute_next_point()

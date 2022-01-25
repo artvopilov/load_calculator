@@ -6,7 +6,8 @@ from src.items.lifting_item import LiftingItem
 from src.items.pallet import Pallet
 from src.items.shipment import Shipment
 from src.items.volume_item import VolumeItem
-from src.iterators.corner_free_space_iterator import CornerFreeSpaceIterator
+from src.iterators.corner_ground_free_space_iterator import CornerGroundFreeSpaceIterator
+from src.iterators.space_iterator import SpaceIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.volume_parameters import VolumeParameters
@@ -21,7 +22,7 @@ class Container(VolumeItem, LiftingItem):
 
     _id_to_pallet: Dict[int, Pallet]
     _id_to_shipment: Dict[int, Shipment]
-    _shipment_order: List[int]
+    _shipment_id_order: List[int]
 
     _id_to_min_point: Dict[int, Point]
 
@@ -34,7 +35,7 @@ class Container(VolumeItem, LiftingItem):
 
         self._id_to_pallet = {}
         self._id_to_shipment = {}
-        self._shipment_order = []
+        self._shipment_id_order = []
 
         self._id_to_min_point = {}
 
@@ -77,14 +78,20 @@ class Container(VolumeItem, LiftingItem):
         return self._id_to_shipment
 
     @property
-    def shipment_order(self) -> List[int]:
-        return self._shipment_order
+    def shipment_id_order(self) -> List[int]:
+        return self._shipment_id_order
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
 
     def __str__(self) -> str:
-        return f'Container: ({self._key()})'
+        return f'Container: (' \
+               f'id={self.id}; ' \
+               f'length={self.length}; ' \
+               f'width={self.width}; ' \
+               f'height={self.height}; ' \
+               f'lifting_capacity={self.length}' \
+               f')'
 
     def load_pallet_if_fits(self, pallet: Pallet) -> bool:
         for point in self._get_floor_iterator():
@@ -141,11 +148,11 @@ class Container(VolumeItem, LiftingItem):
     def _compute_max_weight_count(self, weight: int) -> int:
         return self.lifting_capacity // weight
 
-    def _get_floor_iterator(self) -> CornerFreeSpaceIterator:
-        return CornerFreeSpaceIterator(self._space[:, :, :1])
+    def _get_floor_iterator(self) -> SpaceIterator:
+        return CornerGroundFreeSpaceIterator(self._space[:, :, :1])
 
-    def _get_space_iterator(self) -> CornerFreeSpaceIterator:
-        return CornerFreeSpaceIterator(self._space)
+    def _get_space_iterator(self) -> SpaceIterator:
+        return CornerGroundFreeSpaceIterator(self._space)
 
     def _compute_pallet_id_to_loading_weight(self, min_point: Point, max_point: Point, weight: int) -> Dict[int, float]:
         floor_surface = self._get_sub_space(min_point.with_height(0), max_point.with_height(1))
@@ -203,7 +210,7 @@ class Container(VolumeItem, LiftingItem):
     ) -> None:
         self._load_into_space(point, max_point, shipment.id)
         self._id_to_shipment[shipment.id] = shipment
-        self._shipment_order.append(shipment.id)
+        self._shipment_id_order.append(shipment.id)
         for id_, weight in pallet_id_to_loading_weight.items():
             self._pallet_id_to_loaded_weight[id_] += weight
 

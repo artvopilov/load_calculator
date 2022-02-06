@@ -3,14 +3,14 @@ from datetime import datetime
 from item_fabric import ItemFabric
 from loader import Loader
 from src.image_3d_creator import Image3dCreator
-from src.testing_constants import SMALL_CONTAINER_PARAMETERS, SMALL_SHIPMENT_COUNTS, SMALL_PALLET_PARAMETERS
+from src.testing_constants import SMALL_CONTAINER_COUNTS, SMALL_SHIPMENT_COUNTS
 
 
 def test_loading():
     now = datetime.now()
 
     item_fabric = ItemFabric()
-    loader = Loader(SMALL_CONTAINER_PARAMETERS, SMALL_SHIPMENT_COUNTS, SMALL_PALLET_PARAMETERS, item_fabric)
+    loader = Loader(SMALL_CONTAINER_COUNTS, SMALL_SHIPMENT_COUNTS, item_fabric)
 
     loader.load()
 

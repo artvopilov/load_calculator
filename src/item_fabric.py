@@ -1,8 +1,6 @@
-from src.items.pallet import Pallet
-from src.items.shipment import Shipment
 from src.items.container import Container
+from src.items.shipment import Shipment
 from src.parameters.container_parameters import ContainerParameters
-from src.parameters.pallet_parameters import PalletParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
@@ -21,8 +19,3 @@ class ItemFabric:
         shipment = Shipment(shipment_parameters, self._current_id)
         self._current_id += 1
         return shipment
-
-    def create_pallet(self, pallet_parameters: PalletParameters) -> Pallet:
-        pallet = Pallet(pallet_parameters, self._current_id)
-        self._current_id += 1
-        return pallet

@@ -1,4 +1,5 @@
-from typing import Tuple
+from itertools import permutations
+from typing import Tuple, List
 
 from src.parameters.color_parameters import ColorParameters
 from src.parameters.volume_parameters import VolumeParameters
@@ -11,13 +12,24 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     _height: int
     _weight: int
     _color: str
+    _can_cant: bool
+    _can_stack: bool
 
-    def __init__(self, length: int, width: int, height: int, weight: int, color: str) -> None:
+    def __init__(self,
+                 length: int,
+                 width: int,
+                 height: int,
+                 weight: int,
+                 color: str,
+                 can_cant: bool,
+                 can_stack: bool) -> None:
         self._length = length
         self._width = width
         self._height = height
         self._weight = weight
         self._color = color
+        self._can_cant = can_cant
+        self._can_stack = can_stack
 
     @property
     def length(self) -> int:
@@ -39,8 +51,16 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     def color(self) -> str:
         return self._color
 
+    @property
+    def can_cant(self) -> bool:
+        return self._can_cant
+
+    @property
+    def can_stack(self) -> bool:
+        return self._can_stack
+
     def _key(self) -> Tuple:
-        return self.length, self.width, self.height, self.weight
+        return self.length, self.width, self.height, self.weight, self.color
 
     def __eq__(self, other) -> bool:
         if isinstance(other, type(self)):
@@ -49,3 +69,16 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
 
     def __hash__(self) -> int:
         return hash(self._key())
+
+    def swap_length_width_height(self) -> List['ShipmentParameters']:
+        parameters = []
+        for p in permutations([self.length, self.width, self.height]):
+            parameters.append(ShipmentParameters(
+                p[0],
+                p[1],
+                p[2],
+                self.weight,
+                self.color,
+                self.can_cant,
+                self.can_stack))
+        return parameters

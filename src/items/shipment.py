@@ -39,6 +39,14 @@ class Shipment(VolumeItem, WeightItem, ColorItem):
         return self._parameters.color
 
     @property
+    def can_cant(self) -> bool:
+        return self._parameters.can_cant
+
+    @property
+    def can_stack(self) -> bool:
+        return self._parameters.can_stack
+
+    @property
     def parameters(self) -> ShipmentParameters:
         return self._parameters
 

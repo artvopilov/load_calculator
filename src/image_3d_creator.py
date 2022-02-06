@@ -55,12 +55,11 @@ class Image3dCreator:
         self._create(container, len(container.id_to_shipment))
 
     def create_iterative(self, container: Container) -> None:
-        pallets_num = len(container.id_to_pallet)
         shipments_num = len(container.id_to_shipment)
         shipments_iterations_num = np.linspace(0, shipments_num, 10)
 
         for iter_num in shipments_iterations_num:
-            if pallets_num == 0 and iter_num == 0:
+            if iter_num == 0:
                 continue
             self._create(container, int(iter_num))
 
@@ -89,10 +88,6 @@ class Image3dCreator:
         cubes = []
         colors = []
 
-        for pallet in container.id_to_pallet.values():
-            point = container.id_to_min_point[pallet.id]
-            self._add_cube_data(point, pallet, cubes, colors)
-
         for shipment_id in container.shipment_id_order[:shipments_num]:
             point = container.id_to_min_point[shipment_id]
             shipment = container.id_to_shipment[shipment_id]
@@ -101,8 +96,7 @@ class Image3dCreator:
         return Poly3DCollection(
             np.concatenate(cubes),
             facecolors=np.repeat(colors, len(self.POLYGONS)),
-            edgecolor='k'
-        )
+            edgecolor='k')
 
     def _add_cube_data(self, point: Point, item: Item, cubes: List[np.array], colors: List[str]):
         cube = self._compute_cube_data(point, item.parameters)

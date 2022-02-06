@@ -1,65 +1,64 @@
-from typing import Dict, List, Set, Optional
+from typing import Dict, Set, List
 
-from parameters.container_parameters import ContainerParameters
-from parameters.pallet_parameters import PalletParameters
-from parameters.shipment_parameters import ShipmentParameters
-from src.items.container import Container
 from src.item_fabric import ItemFabric
+from src.items.container import Container
 from src.items.shipment import Shipment
+from src.parameters.container_parameters import ContainerParameters
+from src.parameters.shipment_parameters import ShipmentParameters
 
 
 class Loader:
-    _container_parameters: ContainerParameters
+    _container_counts: Dict[ContainerParameters, int]
     _shipments_counts: Dict[ShipmentParameters, int]
-    _pallet_parameters: Optional[PalletParameters]
+
     _load_item_fabric: ItemFabric
+
     _containers: List[Container]
-    _non_loadable_shipments: Set[ShipmentParameters]
 
     def __init__(self,
-                 container_parameters: ContainerParameters,
+                 container_counts: Dict[ContainerParameters, int],
                  shipments_counts: Dict[ShipmentParameters, int],
-                 pallet_parameters: Optional[PalletParameters],
                  load_item_fabric: ItemFabric):
-        self._container_parameters = container_parameters
+        self._container_counts = container_counts
         self._shipments_counts = shipments_counts
-        self._pallet_parameters = pallet_parameters
         self._load_item_fabric = load_item_fabric
         self._containers = []
-        self._non_loadable_shipments = set()
 
     @property
-    def containers(self):
+    def containers(self) -> List[Container]:
         return self._containers
 
     @property
-    def non_loadable_shipments(self):
-        return self._non_loadable_shipments
+    def non_loadable_shipments(self) -> Dict[ShipmentParameters, int]:
+        return self._shipments_counts
 
     def load(self) -> None:
         shipments_order = self._calculate_shipments_order()
         self._load_shipments(shipments_order)
-        self._unload_empty_pallets()
 
     def unload(self) -> None:
         self._containers = []
-        self._non_loadable_shipments = set()
 
     def _calculate_shipments_order(self) -> List[ShipmentParameters]:
         return list(sorted(
             self._shipments_counts.keys(),
-            key=lambda s: (s.length + s.width + s.height, s.weight),
+            key=lambda s: (
+                s.can_stack,
+                max(s.length, s.width, s.height),
+                s.length + s.width + s.height,
+                s.weight),
             reverse=True))
 
     def _load_shipments(self, shipments_order: List[ShipmentParameters]) -> None:
         for shipment_parameters in shipments_order:
-            shipment_count = self._shipments_counts[shipment_parameters]
-            for i in range(shipment_count):
-                shipment = self._load_item_fabric.create_shipment(shipment_parameters)
-
+            while self._shipments_counts[shipment_parameters]:
+                shipment = self._create_shipment(shipment_parameters)
                 if not self._load_shipment(shipment):
-                    self._non_loadable_shipments.add(shipment_parameters)
                     break
+                self._shipments_counts[shipment_parameters] -= 1
+
+    def _create_shipment(self, shipment_parameters: ShipmentParameters) -> Shipment:
+        return self._load_item_fabric.create_shipment(shipment_parameters)
 
     def _load_shipment(self, shipment: Shipment) -> bool:
         if self._load_into_existing_container(shipment):
@@ -70,45 +69,19 @@ class Loader:
 
     def _load_into_existing_container(self, shipment: Shipment) -> bool:
         for container in self._containers:
-            if container.load_shipment_if_fits(shipment):
+            if container.load(shipment):
                 return True
         return False
 
     def _load_into_new_container(self, shipment: Shipment) -> bool:
-        container = self._create_container_with_pallets()
-
-        if container.load_shipment_if_fits(shipment):
+        container_parameters = self._compute_next_container_parameters()
+        container = self._load_item_fabric.create_container(container_parameters)
+        if container.load(shipment):
             self._containers.append(container)
             return True
         return False
 
-    def _create_container_with_pallets(self) -> Container:
-        container = self._load_item_fabric.create_container(self._container_parameters)
-        self._load_pallets(container)
-        return container
+    def _compute_next_container_parameters(self) -> ContainerParameters:
+        return list(self._container_counts.keys())[0]
 
-    def _load_pallets(self, container: Container) -> None:
-        if not self._pallet_parameters:
-            return
 
-        pallet_parameters = self._choose_pallet_direction(container)
-        loading = True
-        while loading:
-            pallet = self._load_item_fabric.create_pallet(pallet_parameters)
-            loading = container.load_pallet_if_fits(pallet)
-
-    def _choose_pallet_direction(self, container: Container) -> PalletParameters:
-        pallet_directions = self._pallet_parameters.swap_length_width()
-
-        max_pallets_count = 0
-        optimized_pallet_parameters = None
-        for pallet_parameters in pallet_directions:
-            pallets_count = container.compute_max_pallets_count(pallet_parameters)
-            if pallets_count > max_pallets_count:
-                max_pallets_count = pallets_count
-                optimized_pallet_parameters = pallet_parameters
-        return optimized_pallet_parameters
-
-    def _unload_empty_pallets(self):
-        for container in self._containers:
-            container.unload_empty_pallets()

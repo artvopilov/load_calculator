@@ -1,4 +1,4 @@
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple, Optional
 
 from src.item_fabric import ItemFabric
 from src.items.container import Container
@@ -50,12 +50,17 @@ class Loader:
             reverse=True))
 
     def _load_shipments(self, shipments_order: List[ShipmentParameters]) -> None:
-        for shipment_parameters in shipments_order:
-            while self._shipments_counts[shipment_parameters]:
-                shipment = self._create_shipment(shipment_parameters)
-                if not self._load_shipment(shipment):
-                    break
-                self._shipments_counts[shipment_parameters] -= 1
+        for shipment_params in shipments_order:
+            possible_shipment_params = [shipment_params]
+            if shipment_params.can_cant:
+                possible_shipment_params.append(shipment_params.swap_length_width_height())
+
+            while self._shipments_counts[shipment_params]:
+                for cur_shipment_params in possible_shipment_params:
+                    shipment = self._create_shipment(cur_shipment_params)
+                    if self._load_shipment(shipment):
+                        self._shipments_counts[shipment_params] -= 1
+                        break
 
     def _create_shipment(self, shipment_parameters: ShipmentParameters) -> Shipment:
         return self._load_item_fabric.create_shipment(shipment_parameters)
@@ -81,7 +86,35 @@ class Loader:
             return True
         return False
 
-    def _compute_next_container_parameters(self) -> ContainerParameters:
-        return list(self._container_counts.keys())[0]
+    def _compute_next_container_parameters(self) -> Optional[ContainerParameters]:
+        shipments_weight, shipments_volume = self._compute_shipments_weight_and_volume()
+
+        possible_container_params = list(map(
+            lambda x: x[0],
+            filter(lambda x: x[1] > 0, self._container_counts.items())))
+        if len(possible_container_params) <= 0:
+            return None
+
+        best_container_params = None
+        best_weight_diff, best_volume_diff = -1e5, -1e5
+        for container_params in possible_container_params:
+            weight_diff = container_params.lifting_capacity - shipments_weight
+            volume_diff = container_params.compute_volume() - shipments_volume
+            # TODO!!!
+
+            if (weight_diff + volume_diff < best_weight_diff + best_volume_diff) \
+                    or (best_weight_diff < 0 or best_volume_diff < 0):
+                best_container_params = container_params
+                best_weight_diff, best_volume_diff = weight_diff, volume_diff
 
 
+
+        return best_container_params
+
+    def _compute_shipments_weight_and_volume(self) -> Tuple[float, float]:
+        shipments_weight = 0
+        shipments_volume = 0
+        for shipment_params, count in self._shipments_counts.items():
+            shipments_weight += shipment_params.weight * count
+            shipments_volume += shipment_params.compute_volume() * count
+        return shipments_weight, shipments_volume

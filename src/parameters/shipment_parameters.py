@@ -73,6 +73,8 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     def swap_length_width_height(self) -> List['ShipmentParameters']:
         parameters = []
         for p in permutations([self.length, self.width, self.height]):
+            if p[0] == self.length and p[1] == self.width and p[2] == self.height:
+                continue
             parameters.append(ShipmentParameters(
                 p[0],
                 p[1],

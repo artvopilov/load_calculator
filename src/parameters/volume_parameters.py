@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from itertools import permutations
-from typing import List
 
 
 class VolumeParameters(ABC):
@@ -18,3 +16,6 @@ class VolumeParameters(ABC):
     @abstractmethod
     def height(self) -> int:
         pass
+
+    def compute_volume(self) -> int:
+        return self.length * self.width * self.height

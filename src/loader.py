@@ -1,4 +1,4 @@
-from typing import Dict, Set, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 
 from src.item_fabric import ItemFabric
 from src.items.container import Container

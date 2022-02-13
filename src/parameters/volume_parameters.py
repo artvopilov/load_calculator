@@ -19,3 +19,6 @@ class VolumeParameters(ABC):
 
     def compute_volume(self) -> int:
         return self.length * self.width * self.height
+
+    def compute_area(self) -> int:
+        return self.length * self.width

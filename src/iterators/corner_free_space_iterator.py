@@ -23,9 +23,9 @@ class CornerFreeSpaceIterator(SpaceIterator):
         pass
 
     def _compute_start_point(self) -> Optional[Point]:
-        return self._compute_next_point()
+        return self._compute_next_empty_point()
 
-    def _compute_next_point(self) -> Optional[Point]:
+    def _compute_next_empty_point(self) -> Optional[Point]:
         if self._has_next():
             return self._move()
         return None

@@ -45,7 +45,7 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
 
     @property
     def weight(self) -> int:
-        return self._width
+        return self._weight
 
     @property
     def color(self) -> str:
@@ -70,6 +70,9 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     def __hash__(self) -> int:
         return hash(self._key())
 
+    def __str__(self) -> str:
+        return f'Shipment parameters: ({self._key()})'
+
     def swap_length_width_height(self) -> List['ShipmentParameters']:
         parameters = []
         for p in permutations([self.length, self.width, self.height]):
@@ -84,3 +87,12 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
                 self.can_cant,
                 self.can_stack))
         return parameters
+
+    def get_smallest_area_params(self) -> 'ShipmentParameters':
+        smallest_area = None
+        smallest_area_params = None
+        for params in self.swap_length_width_height():
+            if not smallest_area_params or params.compute_area() < smallest_area:
+                smallest_area = params.compute_area()
+                smallest_area_params = params
+        return smallest_area_params

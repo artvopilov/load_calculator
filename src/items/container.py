@@ -6,6 +6,7 @@ from src.items.lifting_item import LiftingItem
 from src.items.shipment import Shipment
 from src.items.volume_item import VolumeItem
 from src.iterators.corner_ground_free_space_iterator import CornerGroundFreeSpaceIterator
+from src.iterators.corner_space_iterator import CornerSpaceIterator
 from src.iterators.space_iterator import SpaceIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.volume_parameters import VolumeParameters
@@ -81,17 +82,15 @@ class Container(VolumeItem, LiftingItem):
                f')'
 
     def load(self, shipment: Shipment) -> bool:
-        for point in self._get_space_iterator():
-            max_point = self._compute_max_point(point, shipment.parameters)
-            if not self._volume_fits(point, max_point):
-                continue
-            if not self._surface_fits(point, max_point):
-                continue
-            if not self._weight_fits(shipment.weight):
-                continue
-            self._load(point, max_point, shipment)
-            return True
-        return False
+        if self._shipment_id_order:
+            last_shipment_id = self._shipment_id_order[-1]
+            last_shipment = self._id_to_shipment[last_shipment_id]
+            last_shipment_min_point = self._id_to_min_point[last_shipment_id]
+            if last_shipment.parameters == shipment.parameters:
+                min_point = last_shipment_min_point.with_z(last_shipment_min_point.z + last_shipment.height)
+                if self._load_into_point(shipment, min_point):
+                    return True
+        return self._load(shipment)
 
     def unload(self) -> None:
         self._space.fill(0)
@@ -99,8 +98,25 @@ class Container(VolumeItem, LiftingItem):
         self._id_to_shipment = {}
         self._shipment_id_order = []
 
+    def _load(self, shipment: Shipment) -> bool:
+        for point in self._get_space_iterator():
+            if self._load_into_point(shipment, point):
+                return True
+        return False
+
+    def _load_into_point(self, shipment: Shipment, point: Point) -> bool:
+        max_point = self._compute_max_point(point, shipment.parameters)
+        if not self._volume_fits(point, max_point):
+            return False
+        if not self._surface_fits(point, max_point):
+            return False
+        if not self._weight_fits(shipment.weight):
+            return False
+        self._set_loaded(point, max_point, shipment)
+        return True
+
     def _get_space_iterator(self) -> SpaceIterator:
-        return CornerGroundFreeSpaceIterator(self._space)
+        return CornerSpaceIterator(self._space)
 
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:
@@ -126,7 +142,7 @@ class Container(VolumeItem, LiftingItem):
     def _surface_fits(self, point: Point, max_point: Point) -> bool:
         if point.z == 0:
             return True
-        surface = self._get_sub_space(point.with_height(point.z - 1), max_point.with_height(point.z - 1))
+        surface = self._get_sub_space(point.with_z(point.z - 1), max_point.with_z(point.z - 1))
         if not self._is_surface_steady(surface):
             return False
         return self._can_stack_on_surface(surface)
@@ -147,11 +163,11 @@ class Container(VolumeItem, LiftingItem):
     def _get_sub_space(self, min_point: Point, max_point: Point) -> np.array:
         return self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]
 
-    def _load(self, point: Point, max_point: Point, shipment: Shipment) -> None:
-        self._load_into_space(point, max_point, shipment.id)
+    def _set_loaded(self, point: Point, max_point: Point, shipment: Shipment) -> None:
+        self._set_loaded_into_space(point, max_point, shipment.id)
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
 
-    def _load_into_space(self, point: Point, max_point: Point, id_: int) -> None:
+    def _set_loaded_into_space(self, point: Point, max_point: Point, id_: int) -> None:
         self._space[point.x:max_point.x + 1, point.y:max_point.y + 1, point.z:max_point.z + 1] = id_
         self._id_to_min_point[id_] = point

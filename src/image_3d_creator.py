@@ -50,13 +50,17 @@ class Image3dCreator:
         self._current_time = current_time
 
     def create(self, container: Container) -> None:
-        print(f'Plotting {container}')
-
         self._create(container, len(container.id_to_shipment))
 
     def create_iterative(self, container: Container) -> None:
-        shipments_num = len(container.id_to_shipment)
-        shipments_iterations_num = np.linspace(0, shipments_num, 10)
+        shipments_iterations_num = []
+        last_shipment_params = None
+        for n, shipment_id in enumerate(container.shipment_id_order):
+            shipment = container.id_to_shipment[shipment_id]
+            if shipment.parameters != last_shipment_params:
+                shipments_iterations_num.append(n)
+                last_shipment_params = shipment.parameters
+        shipments_iterations_num.append(len(container.shipment_id_order))
 
         for iter_num in shipments_iterations_num:
             if iter_num == 0:
@@ -100,12 +104,6 @@ class Image3dCreator:
 
     def _add_cube_data(self, point: Point, item: Item, cubes: List[np.array], colors: List[str]):
         cube = self._compute_cube_data(point, item.parameters)
-
-        if 'Shipment' in item.__str__():
-            print(f'Plotting {item} on {cube}')
-            if (cube[:, :, 2] == 0).any():
-                print(f'Plotting {item} on {point}')
-
         cubes.append(cube)
         colors.append(item.parameters.color)
 

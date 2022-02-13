@@ -14,7 +14,7 @@ class SpaceIterator(ABC):
         return self
 
     def __next__(self) -> Point:
-        current_point = self._compute_start_point() if self._is_start_point else self._compute_next_point()
+        current_point = self._compute_start_point() if self._is_start_point else self._compute_next_empty_point()
         self._is_start_point = False
 
         if not current_point:
@@ -26,5 +26,5 @@ class SpaceIterator(ABC):
         pass
 
     @abstractmethod
-    def _compute_next_point(self) -> Optional[Point]:
+    def _compute_next_empty_point(self) -> Optional[Point]:
         pass

@@ -18,7 +18,15 @@ class CornerSpaceIterator(SpaceIterator):
     def _compute_start_point(self) -> Optional[Point]:
         if self._space.size == 0:
             return None
-        raise self._point
+        return self._point
+
+    def _compute_next_empty_point(self) -> Optional[Point]:
+        self._point = self._compute_next_point()
+        while self._space[self._point.x, self._point.y, self._point.z]:
+            self._point = self._compute_next_point()
+            if not self._point:
+                break
+        return self._point
 
     def _compute_next_point(self) -> Optional[Point]:
         if self._has_next_x():

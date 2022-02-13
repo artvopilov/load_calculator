@@ -31,7 +31,7 @@ class Loader:
         return self._containers
 
     @property
-    def non_loadable_shipments(self) -> Dict[ShipmentParameters, int]:
+    def shipments_counts(self) -> Dict[ShipmentParameters, int]:
         return self._shipments_counts
 
     def load(self) -> None:
@@ -45,7 +45,7 @@ class Loader:
         return list(sorted(
             self._shipments_counts.keys(),
             key=lambda s: (
-                s.can_stack,
+                # s.can_stack,
                 max(s.length, s.width, s.height),
                 s.length + s.width + s.height,
                 s.weight),
@@ -54,20 +54,29 @@ class Loader:
     def _load_shipments(self, shipments_order: List[ShipmentParameters]) -> None:
         for shipment_params in shipments_order:
             possible_shipment_params = [shipment_params]
+            if not shipment_params.can_stack:
+                possible_shipment_params = [shipment_params.get_smallest_area_params()]
             if shipment_params.can_cant:
-                possible_shipment_params.append(shipment_params.swap_length_width_height())
+                for params in shipment_params.swap_length_width_height():
+                    if params == possible_shipment_params[0]:
+                        continue
+                    possible_shipment_params.append(params)
 
-            while self._shipments_counts[shipment_params]:
+            loading = True
+            while self._shipments_counts[shipment_params] and loading:
+                loading = False
                 for cur_shipment_params in possible_shipment_params:
                     shipment = self._create_shipment(cur_shipment_params)
                     if self._load_shipment(shipment):
                         self._shipments_counts[shipment_params] -= 1
+                        loading = True
                         break
 
     def _create_shipment(self, shipment_parameters: ShipmentParameters) -> Shipment:
         return self._load_item_fabric.create_shipment(shipment_parameters)
 
     def _load_shipment(self, shipment: Shipment) -> bool:
+        print(f'Loading {shipment}')
         if self._load_into_existing_container(shipment):
             return True
         if self._load_into_new_container(shipment):
@@ -88,6 +97,7 @@ class Loader:
         container = self._load_item_fabric.create_container(container_parameters)
         if container.load(shipment):
             self._containers.append(container)
+            self._container_counts[container_parameters] -= 1
             return True
         return False
 

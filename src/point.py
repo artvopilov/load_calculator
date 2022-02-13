@@ -4,9 +4,6 @@ class Point:
         self._y = y
         self._z = z
 
-    def with_height(self, height: int) -> 'Point':
-        return Point(self.x, self.y, height)
-
     @property
     def x(self):
         return self._x
@@ -32,3 +29,9 @@ class Point:
 
     def __str__(self):
         return f'Point: ({self.x}, {self.y}, {self.z})'
+
+    def with_z(self, z: int) -> 'Point':
+        return Point(self.x, self.y, z)
+
+    def with_x(self, x: int) -> 'Point':
+        return Point(x, self.y, self.z)

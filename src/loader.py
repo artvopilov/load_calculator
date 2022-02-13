@@ -8,6 +8,8 @@ from src.parameters.shipment_parameters import ShipmentParameters
 
 
 class Loader:
+    _CONTAINER_COEFFICIENT_THRESHOLD = 1.1
+
     _container_counts: Dict[ContainerParameters, int]
     _shipments_counts: Dict[ShipmentParameters, int]
 
@@ -80,6 +82,9 @@ class Loader:
 
     def _load_into_new_container(self, shipment: Shipment) -> bool:
         container_parameters = self._compute_next_container_parameters()
+        # no container available
+        if not container_parameters:
+            return False
         container = self._load_item_fabric.create_container(container_parameters)
         if container.load(shipment):
             self._containers.append(container)
@@ -89,32 +94,48 @@ class Loader:
     def _compute_next_container_parameters(self) -> Optional[ContainerParameters]:
         shipments_weight, shipments_volume = self._compute_shipments_weight_and_volume()
 
-        possible_container_params = list(map(
-            lambda x: x[0],
-            filter(lambda x: x[1] > 0, self._container_counts.items())))
+        possible_container_params = self._get_possible_container_params()
         if len(possible_container_params) <= 0:
             return None
 
-        best_container_params = None
-        best_weight_diff, best_volume_diff = -1e5, -1e5
+        selected_container_params = None
+        selected_weight_c, selected_volume_c = 0, 0
         for container_params in possible_container_params:
-            weight_diff = container_params.lifting_capacity - shipments_weight
-            volume_diff = container_params.compute_volume() - shipments_volume
-            # TODO!!!
+            weight_c = container_params.lifting_capacity / shipments_weight
+            volume_c = container_params.compute_volume() / shipments_volume
 
-            if (weight_diff + volume_diff < best_weight_diff + best_volume_diff) \
-                    or (best_weight_diff < 0 or best_volume_diff < 0):
-                best_container_params = container_params
-                best_weight_diff, best_volume_diff = weight_diff, volume_diff
+            if self._should_use_params(selected_weight_c, selected_volume_c, weight_c, volume_c):
+                selected_container_params = container_params
+                selected_weight_c, selected_volume_c = weight_c, volume_c
 
-
-
-        return best_container_params
+        return selected_container_params
 
     def _compute_shipments_weight_and_volume(self) -> Tuple[float, float]:
-        shipments_weight = 0
         shipments_volume = 0
+        shipments_weight = 0
         for shipment_params, count in self._shipments_counts.items():
-            shipments_weight += shipment_params.weight * count
             shipments_volume += shipment_params.compute_volume() * count
+            shipments_weight += shipment_params.weight * count
         return shipments_weight, shipments_volume
+
+    def _get_possible_container_params(self) -> List[ContainerParameters]:
+        return list(map(lambda x: x[0], filter(lambda x: x[1] > 0, self._container_counts.items())))
+
+    def _should_use_params(
+            self,
+            selected_weight_c: float,
+            selected_volume_c: float,
+            weight_c: float,
+            volume_c: float
+    ) -> bool:
+        min_selected_c = min(selected_weight_c, selected_volume_c)
+        min_c = min(weight_c, volume_c)
+        # selected params do not fit threshold
+        if min_selected_c < self._CONTAINER_COEFFICIENT_THRESHOLD:
+            if min_c > min_selected_c:
+                return True
+        # both selected params and current params fit threshold
+        elif min_c > self._CONTAINER_COEFFICIENT_THRESHOLD:
+            if weight_c + volume_c < selected_weight_c + selected_volume_c:
+                return True
+        return False

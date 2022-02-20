@@ -1,9 +1,9 @@
 from itertools import permutations
 from typing import Tuple, List
 
-from src.parameters.color_parameters import ColorParameters
-from src.parameters.volume_parameters import VolumeParameters
-from src.parameters.weight_parameters import WeightParameters
+from src.parameters.util_parameters.color_parameters import ColorParameters
+from src.parameters.util_parameters.volume_parameters import VolumeParameters
+from src.parameters.util_parameters.weight_parameters import WeightParameters
 
 
 class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
@@ -30,6 +30,9 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
         self._color = color
         self._can_cant = can_cant
         self._can_stack = can_stack
+
+    def from_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
+        return ShipmentParameters(length, width, height, self.weight, self.color, self.can_cant, self._can_stack)
 
     @property
     def length(self) -> int:
@@ -73,25 +76,17 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     def __str__(self) -> str:
         return f'Shipment parameters: ({self._key()})'
 
-    def swap_length_width_height(self) -> List['ShipmentParameters']:
-        parameters = []
+    def get_volume_params_variations(self) -> List['ShipmentParameters']:
+        if self.can_cant:
+            return [self]
+        variations = []
         for p in permutations([self.length, self.width, self.height]):
-            if p[0] == self.length and p[1] == self.width and p[2] == self.height:
-                continue
-            parameters.append(ShipmentParameters(
-                p[0],
-                p[1],
-                p[2],
-                self.weight,
-                self.color,
-                self.can_cant,
-                self.can_stack))
-        return parameters
+            variations.append(self.from_volume_params(p[0], p[1], p[2]))
+        return variations
 
     def get_smallest_area_params(self) -> 'ShipmentParameters':
-        smallest_area = None
-        smallest_area_params = None
-        for params in self.swap_length_width_height():
+        smallest_area_params, smallest_area = None, None
+        for params in self.get_volume_params_variations():
             if not smallest_area_params or params.compute_area() < smallest_area:
                 smallest_area = params.compute_area()
                 smallest_area_params = params

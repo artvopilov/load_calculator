@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from src.items.item import Item
-from src.parameters.lifting_parameters import LiftingParameters
+from src.items.util_items.item import Item
+from src.parameters.util_parameters.lifting_parameters import LiftingParameters
 
 
 class LiftingItem(Item[LiftingParameters]):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.iterators.corner_free_space_iterator import CornerFreeSpaceIterator
+from src.iterators.free_space.corner_free_space_iterator import CornerFreeSpaceIterator
 
 
 class CornerHeightFreeSpaceIterator(CornerFreeSpaceIterator):

@@ -7,8 +7,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from src.items.container import Container
-from src.items.item import Item
-from src.parameters.volume_parameters import VolumeParameters
+from src.items.util_items.item import Item
+from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 

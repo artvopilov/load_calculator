@@ -2,6 +2,7 @@ from datetime import datetime
 
 from item_fabric import ItemFabric
 from loader import Loader
+from src.container_selector import ContainerSelector
 from src.image_3d_creator import Image3dCreator
 from src.testing_constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
 
@@ -10,7 +11,8 @@ def test_loading():
     now = datetime.now()
 
     item_fabric = ItemFabric()
-    loader = Loader(CONTAINER_COUNTS, SHIPMENT_COUNTS, item_fabric)
+    container_selector = ContainerSelector()
+    loader = Loader(CONTAINER_COUNTS, SHIPMENT_COUNTS, item_fabric, container_selector)
 
     loader.load()
 

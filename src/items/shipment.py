@@ -1,8 +1,8 @@
 from typing import Tuple
 
-from src.items.color_item import ColorItem
-from src.items.volume_item import VolumeItem
-from src.items.weight_item import WeightItem
+from src.items.util_items.color_item import ColorItem
+from src.items.util_items.volume_item import VolumeItem
+from src.items.util_items.weight_item import WeightItem
 from src.parameters.shipment_parameters import ShipmentParameters
 
 

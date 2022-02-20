@@ -1,15 +1,15 @@
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 
 import numpy as np
 
-from src.items.lifting_item import LiftingItem
 from src.items.shipment import Shipment
-from src.items.volume_item import VolumeItem
-from src.iterators.corner_ground_free_space_iterator import CornerGroundFreeSpaceIterator
+from src.items.util_items.lifting_item import LiftingItem
+from src.items.util_items.volume_item import VolumeItem
 from src.iterators.corner_space_iterator import CornerSpaceIterator
 from src.iterators.space_iterator import SpaceIterator
 from src.parameters.container_parameters import ContainerParameters
-from src.parameters.volume_parameters import VolumeParameters
+from src.parameters.shipment_parameters import ShipmentParameters
+from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 
@@ -81,16 +81,30 @@ class Container(VolumeItem, LiftingItem):
                f'lifting_capacity={self.length}' \
                f')'
 
-    def load(self, shipment: Shipment) -> bool:
-        if self._shipment_id_order:
-            last_shipment_id = self._shipment_id_order[-1]
-            last_shipment = self._id_to_shipment[last_shipment_id]
-            last_shipment_min_point = self._id_to_min_point[last_shipment_id]
-            if last_shipment.parameters == shipment.parameters:
-                min_point = last_shipment_min_point.with_z(last_shipment_min_point.z + last_shipment.height)
-                if self._load_into_point(shipment, min_point):
-                    return True
-        return self._load(shipment)
+    def load(self, point: Point, shipment: Shipment) -> None:
+        max_point = self._compute_max_point(point, shipment.parameters)
+        self._load_into_space(point, max_point, shipment.id)
+        self._id_to_shipment[shipment.id] = shipment
+        self._shipment_id_order.append(shipment.id)
+
+    def get_last_loaded_shipment(self) -> Optional[Shipment]:
+        if not self._shipment_id_order:
+            return None
+        last_shipment_id = self._shipment_id_order[-1]
+        return self._id_to_shipment[last_shipment_id]
+
+    def can_load_into_point(self, shipment_params: ShipmentParameters, point: Point):
+        max_point = self._compute_max_point(point, shipment_params)
+        if not self._volume_fits(point, max_point):
+            return False
+        if not self._surface_fits(point, max_point):
+            return False
+        if not self._weight_fits(shipment_params.weight):
+            return False
+        return True
+
+    def get_space_iterator(self) -> SpaceIterator:
+        return CornerSpaceIterator(self._space)
 
     def unload(self) -> None:
         self._space.fill(0)
@@ -98,32 +112,16 @@ class Container(VolumeItem, LiftingItem):
         self._id_to_shipment = {}
         self._shipment_id_order = []
 
-    def _load(self, shipment: Shipment) -> bool:
-        for point in self._get_space_iterator():
-            if self._load_into_point(shipment, point):
-                return True
-        return False
-
-    def _load_into_point(self, shipment: Shipment, point: Point) -> bool:
-        max_point = self._compute_max_point(point, shipment.parameters)
-        if not self._volume_fits(point, max_point):
-            return False
-        if not self._surface_fits(point, max_point):
-            return False
-        if not self._weight_fits(shipment.weight):
-            return False
-        self._set_loaded(point, max_point, shipment)
-        return True
-
-    def _get_space_iterator(self) -> SpaceIterator:
-        return CornerSpaceIterator(self._space)
-
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:
         return Point(
             point.x + volume_parameters.length - 1,
             point.y + volume_parameters.width - 1,
             point.z + volume_parameters.height - 1)
+
+    def _load_into_space(self, point: Point, max_point: Point, id_: int) -> None:
+        self._space[point.x:max_point.x + 1, point.y:max_point.y + 1, point.z:max_point.z + 1] = id_
+        self._id_to_min_point[id_] = point
 
     def _volume_fits(self, point: Point, max_point: Point) -> bool:
         if not (self._is_inside_container(point) and self._is_inside_container(max_point)):
@@ -162,12 +160,3 @@ class Container(VolumeItem, LiftingItem):
 
     def _get_sub_space(self, min_point: Point, max_point: Point) -> np.array:
         return self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]
-
-    def _set_loaded(self, point: Point, max_point: Point, shipment: Shipment) -> None:
-        self._set_loaded_into_space(point, max_point, shipment.id)
-        self._id_to_shipment[shipment.id] = shipment
-        self._shipment_id_order.append(shipment.id)
-
-    def _set_loaded_into_space(self, point: Point, max_point: Point, id_: int) -> None:
-        self._space[point.x:max_point.x + 1, point.y:max_point.y + 1, point.z:max_point.z + 1] = id_
-        self._id_to_min_point[id_] = point

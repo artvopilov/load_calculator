@@ -1,5 +1,5 @@
-from src.parameters.lifting_parameters import LiftingParameters
-from src.parameters.volume_parameters import VolumeParameters
+from src.parameters.util_parameters.lifting_parameters import LiftingParameters
+from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
 class ContainerParameters(VolumeParameters, LiftingParameters):

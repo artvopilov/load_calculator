@@ -120,13 +120,13 @@ class Loader:
             return point_above_last_shipment
         print("Iterating container")
         for point in CornerGroundIterator(container):
-            print(f"Checking point {point}")
-            start_time = datetime.now()
+            # print(f"Checking point {point}")
+            # start_time = datetime.now()
 
             can_load = container.can_load_into_point(shipment_params, point)
 
-            end_time = datetime.now()
-            print(f"Point was checked in {end_time - start_time} ms")
+            # end_time = datetime.now()
+            # print(f"Point was checked in {end_time - start_time} ms")
             if can_load:
                 return point
         return None

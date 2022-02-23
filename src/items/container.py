@@ -143,7 +143,7 @@ class Container(VolumeItem, LiftingItem):
         if point.z == 0:
             return True
         area_heights = self._get_area_heights(point, max_point)
-        if not np.all(np.array(area_heights) == point.z):
+        if not np.all(np.array(list(area_heights)) == point.z):
             return False
         area_top_shipments = self._get_area_top_shipments(point, max_point)
         return np.all([s.can_stack for s in area_top_shipments])

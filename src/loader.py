@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
 from src.container_selector import ContainerSelector
 from src.item_fabric import ItemFabric
 from src.items.container import Container
-from src.items.shipment import Shipment
+from src.iterators.corner_ground_iterator import CornerGroundIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.point import Point
@@ -102,8 +103,10 @@ class Loader:
         return shipments_volume, shipments_weight
 
     def _load_shipment_into_container(self, shipment_params: ShipmentParameters, container: Container) -> bool:
+        print("Selecting loading point")
         loading_point = self._select_loading_point(shipment_params, container)
         if loading_point:
+            print("Loading point found, loading")
             shipment = self._load_item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
             return True
@@ -112,9 +115,18 @@ class Loader:
     @staticmethod
     def _select_loading_point(shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
         point_above_last_shipment = container.get_point_above_last_shipment()
+        print(f"Checking point above last shipment: {point_above_last_shipment}")
         if point_above_last_shipment and container.can_load_into_point(shipment_params, point_above_last_shipment):
             return point_above_last_shipment
-        for point in container.get_space_iterator():
-            if container.can_load_into_point(shipment_params, point):
+        print("Iterating container")
+        for point in CornerGroundIterator(container):
+            print(f"Checking point {point}")
+            start_time = datetime.now()
+
+            can_load = container.can_load_into_point(shipment_params, point)
+
+            end_time = datetime.now()
+            print(f"Point was checked in {end_time - start_time} ms")
+            if can_load:
                 return point
         return None

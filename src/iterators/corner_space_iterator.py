@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -53,4 +53,3 @@ class CornerSpaceIterator(SpaceIterator):
 
     def _has_next_y(self) -> bool:
         return self._y < self._space.shape[1] - 1
-

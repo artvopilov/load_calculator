@@ -1,12 +1,10 @@
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List, Optional, Set
 
 import numpy as np
 
 from src.items.shipment import Shipment
 from src.items.util_items.lifting_item import LiftingItem
 from src.items.util_items.volume_item import VolumeItem
-from src.iterators.corner_space_iterator import CornerSpaceIterator
-from src.iterators.space_iterator import SpaceIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -17,7 +15,7 @@ class Container(VolumeItem, LiftingItem):
     _id_: int
     _parameters: ContainerParameters
 
-    _space: np.array
+    _top_shipment_ids: np.array
 
     _id_to_min_point: Dict[int, Point]
     _id_to_shipment: Dict[int, Shipment]
@@ -27,7 +25,7 @@ class Container(VolumeItem, LiftingItem):
         self._id_ = id_
         self._parameters = parameters
 
-        self._space = np.zeros((parameters.length, parameters.width, parameters.height), dtype=np.int32)
+        self._top_shipment_ids = np.zeros((parameters.length, parameters.width), dtype=np.int32)
 
         self._id_to_shipment = {}
         self._id_to_min_point = {}
@@ -91,9 +89,9 @@ class Container(VolumeItem, LiftingItem):
         if not self._shipment_id_order:
             return None
         last_shipment_id = self._shipment_id_order[-1]
-        last_shipment = self._id_to_shipment[last_shipment_id]
-        last_shipment_point = self._id_to_min_point[last_shipment.id]
-        return last_shipment_point.with_z(last_shipment_point.z + last_shipment.height)
+        last_shipment_height = self._get_height(last_shipment_id)
+        last_shipment_point = self._id_to_min_point[last_shipment_id]
+        return last_shipment_point.with_z(last_shipment_height)
 
     def can_load_into_point(self, shipment_params: ShipmentParameters, point: Point):
         max_point = self._compute_max_point(point, shipment_params)
@@ -105,11 +103,13 @@ class Container(VolumeItem, LiftingItem):
             return False
         return True
 
-    def get_space_iterator(self) -> SpaceIterator:
-        return CornerSpaceIterator(self._space)
+    def compute_top_point(self, x: int, y: int) -> Point:
+        shipment_id = self._top_shipment_ids[x, y]
+        height = self._get_height(shipment_id)
+        return Point(x, y, height)
 
     def unload(self) -> None:
-        self._space.fill(0)
+        self._top_shipment_ids.fill(0)
         self._id_to_min_point = {}
         self._id_to_shipment = {}
         self._shipment_id_order = []
@@ -122,7 +122,7 @@ class Container(VolumeItem, LiftingItem):
             point.z + volume_parameters.height - 1)
 
     def _load_into_space(self, point: Point, max_point: Point, id_: int) -> None:
-        self._space[point.x:max_point.x + 1, point.y:max_point.y + 1, point.z:max_point.z + 1] = id_
+        self._top_shipment_ids[point.x:max_point.x + 1, point.y:max_point.y + 1] = id_
         self._id_to_min_point[id_] = point
 
     def _volume_fits(self, point: Point, max_point: Point) -> bool:
@@ -131,34 +131,43 @@ class Container(VolumeItem, LiftingItem):
         return self._is_sub_space_empty(point, max_point)
 
     def _is_inside_container(self, point: Point) -> bool:
-        return 0 <= point.x < self._space.shape[0] \
-               and 0 <= point.y < self._space.shape[1] \
-               and 0 <= point.z < self._space.shape[2]
+        return 0 <= point.x < self._parameters.length \
+               and 0 <= point.y < self._parameters.width \
+               and 0 <= point.z < self._parameters.height
 
     def _is_sub_space_empty(self, min_point: Point, max_point: Point) -> bool:
-        sub_space = self._get_sub_space(min_point, max_point)
-        return (sub_space == 0).all()
+        area_heights = self._get_area_heights(min_point, max_point)
+        return np.all(np.array(list(area_heights)) <= min_point.z)
 
     def _surface_fits(self, point: Point, max_point: Point) -> bool:
         if point.z == 0:
             return True
-        surface = self._get_sub_space(point.with_z(point.z - 1), max_point.with_z(point.z - 1))
-        if not self._is_surface_steady(surface):
+        area_heights = self._get_area_heights(point, max_point)
+        if not np.all(np.array(area_heights) == point.z):
             return False
-        return self._can_stack_on_surface(surface)
+        area_top_shipments = self._get_area_top_shipments(point, max_point)
+        return np.all([s.can_stack for s in area_top_shipments])
 
-    @staticmethod
-    def _is_surface_steady(surface: np.array) -> bool:
-        return np.all(surface != 0)
+    def _get_area_heights(self, point: Point, max_point: Point) -> Set[int]:
+        shipment_ids = np.unique(self._top_shipment_ids[point.x:max_point.x + 1, point.y:max_point.y + 1])
+        shipment_heights = set([self._get_height(id_) for id_ in shipment_ids])
+        return shipment_heights
 
-    def _can_stack_on_surface(self, surface: np.array) -> bool:
-        shipments = [self._id_to_shipment[id_] for id_ in np.unique(surface)]
-        return np.all([shipment.can_stack for shipment in shipments])
+    def _get_height(self, id_: int) -> int:
+        if id_ not in self._id_to_shipment:
+            return 0
+        shipment = self._id_to_shipment[id_]
+        return self._id_to_min_point[shipment.id].z + shipment.height
+
+    def _get_area_top_shipments(self, point: Point, max_point: Point) -> List[Shipment]:
+        shipment_ids = np.unique(self._top_shipment_ids[point.x:max_point.x + 1, point.y:max_point.y + 1])
+        shipments = []
+        for id_ in shipment_ids:
+            if id_ in self._id_to_shipment:
+                shipments.append(self._id_to_shipment[id_])
+        return shipments
 
     def _weight_fits(self, weight: int):
         total_weight = sum([shipment.weight for shipment in self._id_to_shipment.values()])
         total_weight += weight
         return total_weight <= self.lifting_capacity
-
-    def _get_sub_space(self, min_point: Point, max_point: Point) -> np.array:
-        return self._space[min_point.x:max_point.x + 1, min_point.y:max_point.y + 1, min_point.z:max_point.z + 1]

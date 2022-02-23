@@ -77,7 +77,7 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
         return f'Shipment parameters: ({self._key()})'
 
     def get_volume_params_variations(self) -> List['ShipmentParameters']:
-        if self.can_cant:
+        if not self.can_cant:
             return [self]
         variations = []
         for p in permutations([self.length, self.width, self.height]):

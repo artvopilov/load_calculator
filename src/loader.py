@@ -6,6 +6,7 @@ from src.items.container import Container
 from src.items.shipment import Shipment
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
+from src.point import Point
 
 
 class Loader:
@@ -101,25 +102,19 @@ class Loader:
         return shipments_volume, shipments_weight
 
     def _load_shipment_into_container(self, shipment_params: ShipmentParameters, container: Container) -> bool:
-        if self._load_above_last_shipment(shipment_params, container):
+        loading_point = self._select_loading_point(shipment_params, container)
+        if loading_point:
+            shipment = self._load_item_fabric.create_shipment(shipment_params)
+            container.load(loading_point, shipment)
             return True
-        for loading_point in container.get_space_iterator():
-            if container.can_load_into_point(shipment_params, loading_point):
-                shipment = self._create_shipment(shipment_params)
-                container.load(loading_point, shipment)
-                return True
         return False
 
-    def _load_above_last_shipment(self, shipment_params: ShipmentParameters, container: Container) -> bool:
-        last_shipment = container.get_last_loaded_shipment()
-        if last_shipment and last_shipment.parameters == shipment_params:
-            last_shipment_point = container.id_to_min_point[last_shipment.id]
-            loading_point = last_shipment_point.with_z(last_shipment_point.z + last_shipment.height)
-            if container.can_load_into_point(shipment_params, loading_point):
-                shipment = self._create_shipment(shipment_params)
-                container.load(loading_point, shipment)
-                return True
-        return False
-
-    def _create_shipment(self, shipment_parameters: ShipmentParameters) -> Shipment:
-        return self._load_item_fabric.create_shipment(shipment_parameters)
+    @staticmethod
+    def _select_loading_point(shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
+        point_above_last_shipment = container.get_point_above_last_shipment()
+        if point_above_last_shipment and container.can_load_into_point(shipment_params, point_above_last_shipment):
+            return point_above_last_shipment
+        for point in container.get_space_iterator():
+            if container.can_load_into_point(shipment_params, point):
+                return point
+        return None

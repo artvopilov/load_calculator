@@ -51,16 +51,13 @@ class Loader:
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
             self._shipments_counts.keys(),
-            key=lambda s: (
-                s.can_stack,
-                max(s.length, s.width, s.height),
-                s.length + s.width + s.height,
-                s.weight),
+            key=lambda s: [s.can_stack] + sorted([s.length, s.width, s.height], reverse=True) + [s.weight],
             reverse=True))
 
     def _load_shipment_with_params(self, shipment_params: ShipmentParameters):
         shipment_params_variations = shipment_params.get_volume_params_variations()
         for v in shipment_params_variations:
+            print(f'Loading variation: {v}')
             if self._load_into_existing_container(v):
                 return True
             if self._load_into_new_container(v):
@@ -114,19 +111,15 @@ class Loader:
 
     @staticmethod
     def _select_loading_point(shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
-        point_above_last_shipment = container.get_point_above_last_shipment()
-        print(f"Checking point above last shipment: {point_above_last_shipment}")
-        if point_above_last_shipment and container.can_load_into_point(shipment_params, point_above_last_shipment):
-            return point_above_last_shipment
+        last_shipment = container.get_last_loaded_shipment()
+        if last_shipment and last_shipment.parameters == shipment_params:
+            point_above_last_shipment = container.get_point_above_shipment(last_shipment)
+            print(f"Checking point above last shipment: {point_above_last_shipment}")
+            if container.can_load_into_point(shipment_params, point_above_last_shipment):
+                return point_above_last_shipment
         print("Iterating container")
         for point in CornerGroundIterator(container):
-            # print(f"Checking point {point}")
-            # start_time = datetime.now()
-
             can_load = container.can_load_into_point(shipment_params, point)
-
-            # end_time = datetime.now()
-            # print(f"Point was checked in {end_time - start_time} ms")
             if can_load:
                 return point
         return None

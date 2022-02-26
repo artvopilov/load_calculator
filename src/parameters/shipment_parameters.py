@@ -7,6 +7,7 @@ from src.parameters.util_parameters.weight_parameters import WeightParameters
 
 
 class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
+    _name: str
     _length: int
     _width: int
     _height: int
@@ -16,6 +17,7 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     _can_stack: bool
 
     def __init__(self,
+                 name: str,
                  length: int,
                  width: int,
                  height: int,
@@ -23,6 +25,7 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
                  color: str,
                  can_cant: bool,
                  can_stack: bool) -> None:
+        self._name = name
         self._length = length
         self._width = width
         self._height = height
@@ -31,8 +34,13 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
         self._can_cant = can_cant
         self._can_stack = can_stack
 
-    def from_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
-        return ShipmentParameters(length, width, height, self.weight, self.color, self.can_cant, self._can_stack)
+    def with_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
+        return ShipmentParameters(self.name, length, width, height, self.weight,
+                                  self.color, self.can_cant, self._can_stack)
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def length(self) -> int:
@@ -63,7 +71,7 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
         return self._can_stack
 
     def _key(self) -> Tuple:
-        return self.length, self.width, self.height, self.weight, self.color
+        return self.name, self.length, self.width, self.height, self.weight, self.color
 
     def __eq__(self, other) -> bool:
         if isinstance(other, type(self)):
@@ -81,8 +89,8 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
             return [self]
         variations = []
         for p in permutations([self.length, self.width, self.height]):
-            variations.append(self.from_volume_params(p[0], p[1], p[2]))
-        return variations
+            variations.append(self.with_volume_params(p[0], p[1], p[2]))
+        return sorted(variations, key=lambda v: sorted([v.length, v.width, v.height]), reverse=True)
 
     def get_smallest_area_params(self) -> 'ShipmentParameters':
         smallest_area_params, smallest_area = None, None

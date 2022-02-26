@@ -85,13 +85,15 @@ class Container(VolumeItem, LiftingItem):
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
 
-    def get_point_above_last_shipment(self) -> Optional[Point]:
+    def get_last_loaded_shipment(self) -> Optional[Shipment]:
         if not self._shipment_id_order:
             return None
         last_shipment_id = self._shipment_id_order[-1]
-        last_shipment_height = self._get_height(last_shipment_id)
-        last_shipment_point = self._id_to_min_point[last_shipment_id]
-        return last_shipment_point.with_z(last_shipment_height)
+        return self._id_to_shipment[last_shipment_id]
+
+    def get_point_above_shipment(self, shipment: Shipment) -> Point:
+        shipment_point = self._id_to_min_point[shipment.id]
+        return shipment_point.with_z(shipment_point.z + shipment.height)
 
     def can_load_into_point(self, shipment_params: ShipmentParameters, point: Point):
         max_point = self._compute_max_point(point, shipment_params)

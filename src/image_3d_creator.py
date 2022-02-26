@@ -60,6 +60,7 @@ class Image3dCreator:
             if shipment.parameters != last_shipment_params:
                 shipments_iterations_num.append(n)
                 last_shipment_params = shipment.parameters
+                print(f'Processed shipments with params {last_shipment_params}')
         shipments_iterations_num.append(len(container.shipment_id_order))
 
         for iter_num in shipments_iterations_num:

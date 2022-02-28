@@ -3,7 +3,6 @@ from typing import Dict, Tuple, List, Optional, Set
 import numpy as np
 
 from src.items.shipment import Shipment
-from src.items.util_items.lifting_item import LiftingItem
 from src.items.util_items.volume_item import VolumeItem
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -11,7 +10,7 @@ from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 
-class Container(VolumeItem, LiftingItem):
+class Container(VolumeItem):
     _id_: int
     _parameters: ContainerParameters
 
@@ -56,11 +55,11 @@ class Container(VolumeItem, LiftingItem):
         return self._parameters
 
     @property
-    def id_to_min_point(self):
+    def id_to_min_point(self) -> Dict[int, Point]:
         return self._id_to_min_point
 
     @property
-    def id_to_shipment(self):
+    def id_to_shipment(self) -> Dict[int, Shipment]:
         return self._id_to_shipment
 
     @property

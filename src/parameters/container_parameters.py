@@ -1,30 +1,12 @@
-from src.parameters.util_parameters.lifting_parameters import LiftingParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
-class ContainerParameters(VolumeParameters, LiftingParameters):
-    _length: int
-    _width: int
-    _height: int
+class ContainerParameters(VolumeParameters):
     _lifting_capacity: int
 
     def __init__(self, length: int, width: int, height: int, lifting_capacity: int) -> None:
-        self._length = length
-        self._width = width
-        self._height = height
+        VolumeParameters.__init__(self, length, width, height)
         self._lifting_capacity = lifting_capacity
-
-    @property
-    def length(self) -> int:
-        return self._length
-
-    @property
-    def width(self) -> int:
-        return self._width
-
-    @property
-    def height(self) -> int:
-        return self._height
 
     @property
     def lifting_capacity(self) -> int:

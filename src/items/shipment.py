@@ -1,12 +1,10 @@
 from typing import Tuple
 
-from src.items.util_items.color_item import ColorItem
 from src.items.util_items.volume_item import VolumeItem
-from src.items.util_items.weight_item import WeightItem
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
-class Shipment(VolumeItem, WeightItem, ColorItem):
+class Shipment(VolumeItem):
     _id_: int
     _parameters: ShipmentParameters
 

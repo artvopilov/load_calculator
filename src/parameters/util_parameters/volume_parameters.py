@@ -1,21 +1,24 @@
-from abc import ABC, abstractmethod
+class VolumeParameters:
+    _length: int
+    _width: int
+    _height: int
 
+    def __init__(self, length: int, width: int, height: int) -> None:
+        self._length = length
+        self._width = width
+        self._height = height
 
-class VolumeParameters(ABC):
     @property
-    @abstractmethod
     def length(self) -> int:
-        pass
+        return self._length
 
     @property
-    @abstractmethod
     def width(self) -> int:
-        pass
+        return self._width
 
     @property
-    @abstractmethod
     def height(self) -> int:
-        pass
+        return self._height
 
     def compute_volume(self) -> int:
         return self.length * self.width * self.height

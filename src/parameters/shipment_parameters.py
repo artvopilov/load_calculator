@@ -1,16 +1,11 @@
 from itertools import permutations
 from typing import Tuple, List
 
-from src.parameters.util_parameters.color_parameters import ColorParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
-from src.parameters.util_parameters.weight_parameters import WeightParameters
 
 
-class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
+class ShipmentParameters(VolumeParameters):
     _name: str
-    _length: int
-    _width: int
-    _height: int
     _weight: int
     _color: str
     _can_cant: bool
@@ -25,10 +20,8 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
                  color: str,
                  can_cant: bool,
                  can_stack: bool) -> None:
+        VolumeParameters.__init__(self, length, width, height)
         self._name = name
-        self._length = length
-        self._width = width
-        self._height = height
         self._weight = weight
         self._color = color
         self._can_cant = can_cant
@@ -41,18 +34,6 @@ class ShipmentParameters(VolumeParameters, WeightParameters, ColorParameters):
     @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def length(self) -> int:
-        return self._length
-
-    @property
-    def width(self) -> int:
-        return self._width
-
-    @property
-    def height(self) -> int:
-        return self._height
 
     @property
     def weight(self) -> int:

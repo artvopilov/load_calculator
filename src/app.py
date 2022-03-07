@@ -46,7 +46,8 @@ def test_from_file():
         print(container)
         image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():
-        print(f'Not loaded {shipment}: {count}')
+        if count:
+            print(f'Not loaded {shipment}: {count}')
 
 
 def test():
@@ -66,8 +67,9 @@ def test():
         print(container)
         image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():
-        print(f'Not loaded {shipment}: {count}')
+        if count:
+            print(f'Not loaded {shipment}: {count}')
 
 
 if __name__ == '__main__':
-    test()
+    test_from_file()

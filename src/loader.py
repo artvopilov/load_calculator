@@ -1,10 +1,9 @@
-from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
 from src.container_selector import ContainerSelector
 from src.item_fabric import ItemFabric
 from src.items.container import Container
-from src.iterators.corner_ground_iterator import CornerGroundIterator
+from src.iterators.loadable_points_iterator import LoadablePointsIterator
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.point import Point
@@ -103,7 +102,7 @@ class Loader:
         print("Selecting loading point")
         loading_point = self._select_loading_point(shipment_params, container)
         if loading_point:
-            print("Loading point found, loading")
+            print(f"Loading point found {loading_point}, loading")
             shipment = self._load_item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
             return True
@@ -112,14 +111,17 @@ class Loader:
     @staticmethod
     def _select_loading_point(shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
         last_shipment = container.get_last_loaded_shipment()
-        if last_shipment and last_shipment.parameters == shipment_params:
+        if last_shipment \
+                and last_shipment.length == shipment_params.length \
+                and last_shipment.width == shipment_params.width:
             point_above_last_shipment = container.get_point_above_shipment(last_shipment)
             print(f"Checking point above last shipment: {point_above_last_shipment}")
-            if container.can_load_into_point(shipment_params, point_above_last_shipment):
+            if container.can_load_into_point(point_above_last_shipment, shipment_params):
                 return point_above_last_shipment
         print("Iterating container")
-        for point in CornerGroundIterator(container):
-            can_load = container.can_load_into_point(shipment_params, point)
+        for point in LoadablePointsIterator(container):
+            # print(f"Checking point {point}")
+            can_load = container.can_load_into_point(point, shipment_params)
             if can_load:
                 return point
         return None

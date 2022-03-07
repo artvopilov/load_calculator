@@ -1,10 +1,11 @@
 from itertools import permutations
 from typing import Tuple, List
 
+from src.parameters.util_parameters.parameters import Parameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
-class ShipmentParameters(VolumeParameters):
+class ShipmentParameters(VolumeParameters, Parameters):
     _name: str
     _weight: int
     _color: str
@@ -53,14 +54,6 @@ class ShipmentParameters(VolumeParameters):
 
     def _key(self) -> Tuple:
         return self.name, self.length, self.width, self.height, self.weight, self.color
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, type(self)):
-            return self._key() == other._key()
-        return NotImplemented
-
-    def __hash__(self) -> int:
-        return hash(self._key())
 
     def __str__(self) -> str:
         return f'Shipment parameters: ({self._key()})'

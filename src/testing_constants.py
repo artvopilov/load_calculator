@@ -2,7 +2,7 @@ from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
 CONTAINER_COUNTS = {
-    ContainerParameters(length=605, width=235, height=239, lifting_capacity=1000): 1,
+    ContainerParameters(length=605, width=235, height=239, lifting_capacity=10000): 1,
 }
 SHIPMENT_COUNTS = {
     ShipmentParameters('', length=42, width=25, height=17, weight=1, color='blue', can_cant=True, can_stack=True): 19,

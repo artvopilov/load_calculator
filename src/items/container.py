@@ -3,6 +3,7 @@ from typing import Dict, Tuple, List, Optional, Set
 import numpy as np
 
 from src.items.shipment import Shipment
+from src.items.util_items.item import Item
 from src.items.util_items.volume_item import VolumeItem
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -10,8 +11,7 @@ from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.point import Point
 
 
-class Container(VolumeItem):
-    _id_: int
+class Container(Item[ContainerParameters], VolumeItem):
     _parameters: ContainerParameters
 
     _top_shipment_ids: np.array
@@ -21,7 +21,9 @@ class Container(VolumeItem):
     _shipment_id_order: List[int]
 
     def __init__(self, parameters: ContainerParameters, id_: int):
-        self._id_ = id_
+        Item.__init__(self, id_)
+        VolumeItem.__init__(self, parameters)
+
         self._parameters = parameters
 
         self._top_shipment_ids = np.zeros((parameters.length, parameters.width), dtype=np.int32)
@@ -29,22 +31,6 @@ class Container(VolumeItem):
         self._id_to_shipment = {}
         self._id_to_min_point = {}
         self._shipment_id_order = []
-
-    @property
-    def id(self) -> int:
-        return self._id_
-
-    @property
-    def length(self) -> int:
-        return self._parameters.length
-
-    @property
-    def width(self) -> int:
-        return self._parameters.width
-
-    @property
-    def height(self) -> int:
-        return self._parameters.height
 
     @property
     def lifting_capacity(self) -> int:

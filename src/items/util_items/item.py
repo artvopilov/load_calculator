@@ -6,9 +6,18 @@ T = TypeVar('T')
 
 
 class Item(ABC, Generic[T]):
+    _id_: int
+
+    def __init__(self, id_: int):
+        self._id_ = id_
+
+    @property
+    def id(self) -> int:
+        return self._id_
+
     @property
     @abstractmethod
-    def id(self) -> int:
+    def parameters(self) -> T:
         ...
 
     def __eq__(self, other):
@@ -18,11 +27,6 @@ class Item(ABC, Generic[T]):
 
     def __hash__(self):
         return hash(self._key())
-
-    @property
-    @abstractmethod
-    def parameters(self) -> T:
-        ...
 
     @abstractmethod
     def _key(self) -> Tuple:

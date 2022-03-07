@@ -1,32 +1,18 @@
 from typing import Tuple
 
+from src.items.util_items.item import Item
 from src.items.util_items.volume_item import VolumeItem
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
-class Shipment(VolumeItem):
-    _id_: int
+class Shipment(Item[ShipmentParameters], VolumeItem):
     _parameters: ShipmentParameters
 
     def __init__(self, parameters: ShipmentParameters, id_: int):
-        self._id_ = id_
+        Item.__init__(self, id_)
+        VolumeItem.__init__(self, parameters)
+
         self._parameters = parameters
-
-    @property
-    def id(self) -> int:
-        return self._id_
-
-    @property
-    def length(self) -> int:
-        return self._parameters.length
-
-    @property
-    def width(self) -> int:
-        return self._parameters.width
-
-    @property
-    def height(self) -> int:
-        return self._parameters.height
 
     @property
     def weight(self) -> int:

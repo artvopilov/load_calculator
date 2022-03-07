@@ -117,32 +117,40 @@ class Container(Item[ContainerParameters], VolumeItem):
         inside_bottom_points, outside_bottom_points = [], []
         border_top_points, out_border_top_points = [], []
         for p in self._loadable_point_to_volumes.keys():
+            # bottom points
             if p.z == point.z:
+                # should not be cropped
                 if p.x > max_point.x or p.y > max_point.y:
                     continue
+                # should be moved out and cropped if possible
                 if p.x >= point.x and p.y >= point.y:
                     inside_bottom_points.append(p)
+                # should be cropped
                 else:
                     outside_bottom_points.append(p)
+            # top points
             elif p.z == max_point.z:
+                # can not be used for extension
                 if p.x > max_point.x + 1 or p.y > max_point.y + 1:
                     continue
+                # can be used for extension
                 if p.x == max_point.x + 1 or p.y == max_point.y + 1:
                     border_top_points.append(p)
+                # should be extended
                 else:
                     out_border_top_points.append(p)
         return inside_bottom_points, outside_bottom_points, border_top_points, out_border_top_points
 
     def _update_inside_points(self, max_point: Point, points: List[Point]) -> None:
         for p in points:
-            # remove inside point
+            # remove  point
             p_volumes = self._loadable_point_to_volumes.pop(p)
             # move out of borders
             new_p_x = p.with_x(max_point.x + 1)
             new_p_y = p.with_y(max_point.y + 1)
             for v in p_volumes:
                 max_p = self._compute_max_point(p, v)
-                # check if it is enough place
+                # check if it is enough volume for moved point
                 left_length = max_p.x - max_point.x
                 left_width = max_p.y - max_point.y
                 if left_length > 0:
@@ -156,7 +164,7 @@ class Container(Item[ContainerParameters], VolumeItem):
             p_volumes = self._loadable_point_to_volumes.pop(p)
             for v in p_volumes:
                 max_p = self._compute_max_point(p, v)
-                # leave the point if it cannot be updated
+                # leave the point if it should not be updated
                 if max_p.x < point.x or max_p.y < point.y:
                     self._loadable_point_to_volumes[p].add(v)
                     continue

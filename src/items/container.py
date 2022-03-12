@@ -13,7 +13,7 @@ from src.point import Point
 class Container(Item[ContainerParameters], VolumeItem):
     _parameters: ContainerParameters
 
-    _loadable_point_to_volumes: DefaultDict[Point, Set[VolumeParameters]]
+    _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
 
     _id_to_min_point: Dict[int, Point]
     _id_to_shipment: Dict[int, Shipment]
@@ -25,8 +25,10 @@ class Container(Item[ContainerParameters], VolumeItem):
 
         self._parameters = parameters
 
-        self._loadable_point_to_volumes = defaultdict(set)
-        self._loadable_point_to_volumes[Point(0, 0, 0)].add(parameters)
+        loadable_point = Point(0, 0, 0)
+        loadable_max_point = Point(parameters.length - 1, parameters.width - 1, parameters.height - 1)
+        self._loadable_point_to_max_points = defaultdict(set)
+        self._loadable_point_to_max_points[loadable_point].add(loadable_max_point)
 
         self._id_to_shipment = {}
         self._id_to_min_point = {}
@@ -41,8 +43,8 @@ class Container(Item[ContainerParameters], VolumeItem):
         return self._parameters
 
     @property
-    def loadable_point_to_volumes(self) -> DefaultDict[Point, Set[VolumeParameters]]:
-        return self._loadable_point_to_volumes
+    def loadable_point_to_max_points(self) -> DefaultDict[Point, Set[Point]]:
+        return self._loadable_point_to_max_points
 
     @property
     def id_to_min_point(self) -> Dict[int, Point]:
@@ -85,8 +87,9 @@ class Container(Item[ContainerParameters], VolumeItem):
         return shipment_point.with_z(shipment_point.z + shipment.height)
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
-        point_volumes = self._loadable_point_to_volumes[point]
-        for v in point_volumes:
+        max_points = self._loadable_point_to_max_points[point]
+        for max_point in max_points:
+            v = VolumeParameters.from_points(point, max_point)
             if v.length < shipment_params.length:
                 return False
             if v.width < shipment_params.width:
@@ -97,95 +100,82 @@ class Container(Item[ContainerParameters], VolumeItem):
             return False
         return True
 
-    def _update_loadable_points(self, point: Point, shipment: Shipment) -> None:
-        max_point = self._compute_max_point(point, shipment.parameters)
+    def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
+        loading_max_p = self._compute_max_point(loading_p, shipment.parameters)
 
         # insert point above
         if shipment.can_stack:
-            new_point = point.with_z(max_point.z + 1)
+            new_point = loading_p.with_z(loading_max_p.z + 1)
             new_point_volume = shipment.parameters.with_height(self.height - new_point.z)
-            self._loadable_point_to_volumes[new_point].add(new_point_volume)
+            new_max_point = self._compute_max_point(new_point, new_point_volume)
+            self._loadable_point_to_max_points[new_point].add(new_max_point)
 
-        points_for_update = self._select_points_for_update(point, max_point)
+        points_for_update = self._select_points_for_update(loading_p, loading_max_p)
         inside_bottom_points, outside_bottom_points, border_top_points, out_border_top_points = points_for_update
 
-        self._update_inside_points(max_point, inside_bottom_points)
-        self._update_outside_points(point, max_point, outside_bottom_points)
+        self._update_inside_points(loading_max_p, inside_bottom_points)
+        self._update_outside_points(loading_p, loading_max_p, outside_bottom_points)
         # TODO: update top points!!!
 
-    def _select_points_for_update(self, point: Point, max_point: Point) -> Tuple:
+    def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> Tuple:
         inside_bottom_points, outside_bottom_points = [], []
         border_top_points, out_border_top_points = [], []
-        for p in self._loadable_point_to_volumes.keys():
-            # bottom points
-            if p.z == point.z:
-                # should not be cropped
-                if p.x > max_point.x or p.y > max_point.y:
-                    continue
+        for p in self._loadable_point_to_max_points.keys():
+            # bottom points which should be cropped
+            if p.z == loading_p.z and p.x <= loading_max_p.x and p.y <= loading_max_p.y:
                 # should be moved out and cropped if possible
-                if p.x >= point.x and p.y >= point.y:
+                if p.x >= loading_p.x and p.y >= loading_p.y:
                     inside_bottom_points.append(p)
                 # should be cropped
                 else:
                     outside_bottom_points.append(p)
             # top points
-            elif p.z == max_point.z:
+            elif p.z == loading_max_p.z + 1:
                 # can not be used for extension
-                if p.x > max_point.x + 1 or p.y > max_point.y + 1:
+                if p.x > loading_max_p.x + 1 or p.y > loading_max_p.y + 1:
                     continue
-                # can be used for extension
-                if p.x == max_point.x + 1 or p.y == max_point.y + 1:
+                # should be used for extension
+                if p.x == loading_max_p.x + 1 or p.y == loading_max_p.y + 1:
                     border_top_points.append(p)
                 # should be extended
                 else:
                     out_border_top_points.append(p)
         return inside_bottom_points, outside_bottom_points, border_top_points, out_border_top_points
 
-    def _update_inside_points(self, max_point: Point, points: List[Point]) -> None:
+    def _update_inside_points(self, loading_max_p: Point, points: List[Point]) -> None:
         for p in points:
-            # remove  point
-            p_volumes = self._loadable_point_to_volumes.pop(p)
-            # move out of borders
-            new_p_x = p.with_x(max_point.x + 1)
-            new_p_y = p.with_y(max_point.y + 1)
-            for v in p_volumes:
-                max_p = self._compute_max_point(p, v)
-                # check if it is enough volume for moved point
-                left_length = max_p.x - max_point.x
-                left_width = max_p.y - max_point.y
-                if left_length > 0:
-                    self._loadable_point_to_volumes[new_p_x].add(v.with_length(left_length))
-                if left_width > 0:
-                    self._loadable_point_to_volumes[new_p_y].add(v.with_width(left_width))
+            # move point out of borders
+            new_p_x = p.with_x(loading_max_p.x + 1)
+            new_p_y = p.with_y(loading_max_p.y + 1)
+            # remove point and iterate max points
+            for max_p in self._loadable_point_to_max_points.pop(p):
+                if max_p.x > loading_max_p.x:
+                    self._loadable_point_to_max_points[new_p_x].add(max_p)
+                if max_p.y > loading_max_p.y:
+                    self._loadable_point_to_max_points[new_p_y].add(max_p)
 
-    def _update_outside_points(self, point: Point, max_point: Point, outside_points: List[Point]) -> None:
-        for p in outside_points:
-            # remove point
-            p_volumes = self._loadable_point_to_volumes.pop(p)
-            for v in p_volumes:
-                max_p = self._compute_max_point(p, v)
-                # leave the point if it should not be updated
-                if max_p.x < point.x or max_p.y < point.y:
-                    self._loadable_point_to_volumes[p].add(v)
+    def _update_outside_points(self, loading_p: Point, loading_max_p: Point, points: List[Point]) -> None:
+        for p in points:
+            # remove point and iterate max points
+            for max_p in self._loadable_point_to_max_points.pop(p):
+                # should not be cropped
+                if max_p.x < loading_p.x or max_p.y < loading_p.y:
+                    self._loadable_point_to_max_points[p].add(max_p)
                     continue
                 # length should be cropped
-                p_x_diff = point.x - p.x
-                if p_x_diff > 0:
-                    self._loadable_point_to_volumes[p].add(v.with_length(p_x_diff))
+                if loading_p.x > p.x:
+                    self._loadable_point_to_max_points[p].add(max_p.with_x(loading_p.x - 1))
                 # when length is split by new shipment
-                max_p_x_diff = max_p.x - max_point.x
-                if max_p_x_diff > 0:
-                    new_p_x = p.with_x(max_point.x + 1)
-                    self._loadable_point_to_volumes[new_p_x].add(v.with_length(max_p_x_diff))
+                if max_p.x > loading_max_p.x:
+                    new_p_x = p.with_x(loading_max_p.x + 1)
+                    self._loadable_point_to_max_points[new_p_x].add(max_p)
                 # width should be cropped
-                p_y_diff = point.y - p.y
-                if p_y_diff > 0:
-                    self._loadable_point_to_volumes[p].add(v.with_width(p_y_diff))
+                if loading_p.y > p.y:
+                    self._loadable_point_to_max_points[p].add(max_p.with_y(loading_p.y - 1))
                 # when width is split by new shipment
-                max_p_y_diff = max_p.y - max_point.y
-                if max_p_y_diff > 0:
-                    new_p_y = p.with_y(max_point.y + 1)
-                    self._loadable_point_to_volumes[new_p_y].add(v.with_width(max_p_y_diff))
+                if max_p.y > loading_max_p.y:
+                    new_p_y = p.with_y(loading_max_p.y + 1)
+                    self._loadable_point_to_max_points[new_p_y].add(max_p)
 
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:

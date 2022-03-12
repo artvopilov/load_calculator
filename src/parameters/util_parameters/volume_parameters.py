@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from src.parameters.util_parameters.parameters import Parameters
+from src.point import Point
 
 
 class VolumeParameters(Parameters):
@@ -12,6 +13,10 @@ class VolumeParameters(Parameters):
         self._length = length
         self._width = width
         self._height = height
+
+    @staticmethod
+    def from_points(point: Point, max_point: Point) -> 'VolumeParameters':
+        return VolumeParameters(max_point.x - point.x + 1, max_point.y - point.y + 1, max_point.z - point.z + 1)
 
     def with_length(self, length: int) -> 'VolumeParameters':
         return VolumeParameters(length, self.width, self.height)

@@ -110,14 +110,6 @@ class Loader:
 
     @staticmethod
     def _select_loading_point(shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
-        last_shipment = container.get_last_loaded_shipment()
-        # if last_shipment \
-        #         and last_shipment.length == shipment_params.length \
-        #         and last_shipment.width == shipment_params.width:
-        #     point_above_last_shipment = container.get_point_above_shipment(last_shipment)
-        #     print(f"Checking point above last shipment: {point_above_last_shipment}")
-        #     if container.can_load_into_point(point_above_last_shipment, shipment_params):
-        #         return point_above_last_shipment
         print("Iterating container")
         for point in LoadablePointsIterator(container):
             # print(f"Checking point {point}")

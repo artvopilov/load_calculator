@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from tqdm import tqdm
 
 from src.items.container import Container
 from src.items.util_items.item import Item
@@ -60,10 +61,14 @@ class Image3dCreator:
             if shipment.parameters != last_shipment_params:
                 shipments_iterations_num.append(n)
                 last_shipment_params = shipment.parameters
-                print(f'Processed shipments with params {last_shipment_params}')
         shipments_iterations_num.append(len(container.shipment_id_order))
 
-        for iter_num in shipments_iterations_num:
+        # pycharm shows only first n plots
+        shipments_iterations_num_limited = np.random.choice(
+            shipments_iterations_num, min(len(shipments_iterations_num), 20), replace=False)
+        shipments_iterations_num_limited.sort()
+
+        for iter_num in tqdm(shipments_iterations_num_limited):
             if iter_num == 0:
                 continue
             self._create(container, int(iter_num))
@@ -85,7 +90,7 @@ class Image3dCreator:
         ax.set_ylabel('Width')
         ax.set_zlabel('Height')
 
-        ax.set_title(f'{self._current_time.strftime("%H:%M:%S")}\n{container}')
+        ax.set_title(f'{self._current_time.strftime("%H:%M:%S")}\n{container}\nShipments:{shipments_num}')
 
         plt.show()
 

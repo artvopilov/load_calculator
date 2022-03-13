@@ -28,7 +28,7 @@ def test_from_file():
         length, width, height = list(map(lambda x: int(x), s.split('×')))
         shipment_params = ShipmentParameters(n, length, width, height, 1, random.choice(COLORS), True, True)
         shipment_counts[shipment_params] = c
-    print(shipment_counts)
+    print(f'Read {len(shipment_counts)} shipments')
 
     now = datetime.now()
 

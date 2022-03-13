@@ -182,21 +182,26 @@ class Container(Item[ContainerParameters], VolumeItem):
         # extend width up
         cur_extension_points = defaultdict(set)
         points_for_delete = defaultdict(set)
-        # for p in points:
-        #     for max_p in self._loadable_point_to_max_points[p]:
-        #         # try to use points for extension
-        #         for extension_p in extension_points.keys():
-        #             for extension_max_p in extension_points[extension_p]:
-        #                 if max_p.x >= extension_p.x and p.x <= extension_max_p.x and max_p.y + 1 == extension_p.y:
-        #                     new_p = p.with_x(max(p.x, extension_p.x))
-        #                     new_max_p = extension_max_p.with_x(min(max_p.x, extension_max_p.x))
-        #                     cur_extension_points[new_p].add(new_max_p)
-        #
-        # for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
-        #     extension_points[cur_extension_p] |= cur_extension_max_points
+        for p in points:
+            for max_p in self._loadable_point_to_max_points[p]:
+                # try to use points for extension
+                for extension_p in extension_points.keys():
+                    for extension_max_p in extension_points[extension_p]:
+                        if max_p.x >= extension_p.x and p.x <= extension_max_p.x and max_p.y + 1 == extension_p.y:
+                            new_p = p.with_x(max(p.x, extension_p.x))
+                            new_max_p = extension_max_p.with_x(min(max_p.x, extension_max_p.x))
+                            cur_extension_points[new_p].add(new_max_p)
+                            if p.x >= extension_p.x and max_p.x <= extension_max_p.x:
+                                points_for_delete[p].add(max_p)
+
+        for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
+            extension_points[cur_extension_p] |= cur_extension_max_points
+        for point_for_delete, max_points_for_delete in points_for_delete.items():
+            self._loadable_point_to_max_points[point_for_delete] -= max_points_for_delete
 
         # extend length up
         cur_extension_points.clear()
+        points_for_delete.clear()
         for p in points:
             for max_p in self._loadable_point_to_max_points[p]:
                 # try to use points for extension
@@ -209,42 +214,50 @@ class Container(Item[ContainerParameters], VolumeItem):
                             if p.y >= extension_p.y and max_p.y <= extension_max_p.y:
                                 points_for_delete[p].add(max_p)
 
-
         for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
             extension_points[cur_extension_p] |= cur_extension_max_points
-
         for point_for_delete, max_points_for_delete in points_for_delete.items():
             self._loadable_point_to_max_points[point_for_delete] -= max_points_for_delete
 
         # extend width down
-        # cur_extension_points.clear()
-        # for p in points:
-        #     for max_p in self._loadable_point_to_max_points[p]:
-        #         # try to use points for extension
-        #         for extension_p in extension_points.keys():
-        #             for extension_max_p in extension_points[extension_p]:
-        #                 if max_p.x >= extension_p.x and p.x <= extension_max_p.x and p.y == extension_max_p.y + 1:
-        #                     new_p = extension_p.with_x(max(p.x, extension_p.x))
-        #                     new_max_p = max_p.with_x(min(max_p.x, extension_max_p.x))
-        #                     cur_extension_points[new_p].add(new_max_p)
-        #
-        # for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
-        #     extension_points[cur_extension_p] |= cur_extension_max_points
+        cur_extension_points.clear()
+        points_for_delete.clear()
+        for p in points:
+            for max_p in self._loadable_point_to_max_points[p]:
+                # try to use points for extension
+                for extension_p in extension_points.keys():
+                    for extension_max_p in extension_points[extension_p]:
+                        if max_p.x >= extension_p.x and p.x <= extension_max_p.x and p.y == extension_max_p.y + 1:
+                            new_p = extension_p.with_x(max(p.x, extension_p.x))
+                            new_max_p = max_p.with_x(min(max_p.x, extension_max_p.x))
+                            cur_extension_points[new_p].add(new_max_p)
+                            if p.x >= extension_p.x and max_p.x <= extension_max_p.x:
+                                points_for_delete[p].add(max_p)
+
+        for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
+            extension_points[cur_extension_p] |= cur_extension_max_points
+        for point_for_delete, max_points_for_delete in points_for_delete.items():
+            self._loadable_point_to_max_points[point_for_delete] -= max_points_for_delete
 
         # extend length down
-        # cur_extension_points.clear()
-        # for p in points:
-        #     for max_p in self._loadable_point_to_max_points[p]:
-        #         # try to use points for extension
-        #         for extension_p in extension_points.keys():
-        #             for extension_max_p in extension_points[extension_p]:
-        #                 if max_p.y >= extension_p.y and p.y <= extension_max_p.y and p.x == extension_max_p.x + 1:
-        #                     new_p = extension_p.with_x(max(p.x, extension_p.x))
-        #                     new_max_p = max_p.with_x(min(max_p.x, extension_max_p.x))
-        #                     cur_extension_points[new_p].add(new_max_p)
-        #
-        # for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
-        #     extension_points[cur_extension_p] |= cur_extension_max_points
+        cur_extension_points.clear()
+        points_for_delete.clear()
+        for p in points:
+            for max_p in self._loadable_point_to_max_points[p]:
+                # try to use points for extension
+                for extension_p in extension_points.keys():
+                    for extension_max_p in extension_points[extension_p]:
+                        if max_p.y >= extension_p.y and p.y <= extension_max_p.y and p.x == extension_max_p.x + 1:
+                            new_p = extension_p.with_x(max(p.x, extension_p.x))
+                            new_max_p = max_p.with_x(min(max_p.x, extension_max_p.x))
+                            cur_extension_points[new_p].add(new_max_p)
+                            if p.y >= extension_p.y and max_p.y <= extension_max_p.y:
+                                points_for_delete[p].add(max_p)
+
+        for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
+            extension_points[cur_extension_p] |= cur_extension_max_points
+        for point_for_delete, max_points_for_delete in points_for_delete.items():
+            self._loadable_point_to_max_points[point_for_delete] -= max_points_for_delete
 
         for extension_p, extension_max_points in extension_points.items():
             self._loadable_point_to_max_points[extension_p] |= extension_max_points

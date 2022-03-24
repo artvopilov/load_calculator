@@ -64,12 +64,12 @@ class Image3dCreator:
         shipments_iterations_num.append(len(container.shipment_id_order))
 
         # pycharm shows only first n plots
-        shipments_iterations_num_limited = np.random.choice(
-            shipments_iterations_num, min(len(shipments_iterations_num), 15), replace=False)
-        np.append(shipments_iterations_num_limited, shipments_iterations_num[-1])
-        shipments_iterations_num_limited.sort()
+        # shipments_iterations_num_limited = np.random.choice(
+        #     shipments_iterations_num, min(len(shipments_iterations_num), 15), replace=False)
+        # np.append(shipments_iterations_num_limited, shipments_iterations_num[-1])
+        # shipments_iterations_num_limited.sort()
 
-        for iter_num in tqdm(shipments_iterations_num_limited):
+        for iter_num in tqdm(shipments_iterations_num):
             if iter_num == 0:
                 continue
             self._create(container, int(iter_num))

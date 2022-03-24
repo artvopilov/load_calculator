@@ -19,3 +19,18 @@ class ItemFabric:
         shipment = Shipment(shipment_parameters, self._current_id)
         self._current_id += 1
         return shipment
+
+    def create_shipment_params(
+            self,
+            name: str,
+            length: int,
+            width: int,
+            height: int,
+            weight: int,
+            color: str,
+            can_cant: bool,
+            can_stack: bool
+    ) -> ShipmentParameters:
+        shipment_params = ShipmentParameters(self._current_id, name, length, width, height, weight, color, can_cant, can_stack)
+        self._current_id += 1
+        return shipment_params

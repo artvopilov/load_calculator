@@ -13,16 +13,16 @@ class RequestParser:
     def __init__(self, item_fabric: ItemFabric) -> None:
         self._item_fabric = item_fabric
 
-    def parse_shipment_counts(self, request: Request) -> Dict[ShipmentParameters]:
+    def parse_shipment_counts(self, request: Request) -> Dict:
         shipment_counts = {}
-        for cargo in request.form['cargo']:
+        for cargo in request.json['cargo']:
             shipment_params = self._create_shipment_params(cargo)
             shipment_counts[shipment_params] = cargo['number']
         return shipment_counts
 
-    def parse_container_counts(self, request: Request) -> Dict[ContainerParameters]:
+    def parse_container_counts(self, request: Request) -> Dict:
         container_counts = {}
-        for container in request.form['containers']:
+        for container in request.json['containers']:
             container_params = self._create_container_params(container)
             container_counts[container_params] = 1
         return container_counts
@@ -35,15 +35,17 @@ class RequestParser:
         if diameter:
             length = diameter
             width = diameter
+        weight = cargo_request['weight'] if 'weight' in cargo_request else 1
+        cant = cargo_request['cant'] if 'cant' in cargo_request else True
         return self._item_fabric.create_shipment_params(
             cargo_request['name'],
             cargo_request['type'],
             length,
             width,
             height,
-            cargo_request['weight'],
+            weight,
             cargo_request['color'],
-            cargo_request['cant'],
+            cant,
             cargo_request['stack'])
 
     def _create_container_params(self, container_request) -> ContainerParameters:

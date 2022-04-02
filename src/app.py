@@ -18,6 +18,7 @@ def hello_world():
 def calculate():
     item_fabric = ItemFabric()
     request_parser = RequestParser(item_fabric)
+
     shipment_counts = request_parser.parse_shipment_counts(request)
     container_counts = request_parser.parse_container_counts(request)
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Tuple, List, Optional, Set, DefaultDict, Callable
+from typing import Dict, Tuple, List, Optional, Set, DefaultDict
 
 from src.items.shipment import Shipment
 from src.items.util_items.item import Item
@@ -7,7 +7,7 @@ from src.items.util_items.volume_item import VolumeItem
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
-from src.point import Point
+from src.items.point import Point
 
 
 class Container(Item[ContainerParameters], VolumeItem):

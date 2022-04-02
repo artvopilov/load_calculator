@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 from src.iterators.space_iterator import SpaceIterator
-from src.point import Point
+from src.items.point import Point
 
 
 class CornerFreeSpaceIterator(SpaceIterator):

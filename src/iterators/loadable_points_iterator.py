@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from src.items.container import Container
 from src.iterators.space_iterator import SpaceIterator
-from src.point import Point
+from src.items.point import Point
 
 
 class LoadablePointsIterator(SpaceIterator):

@@ -1,5 +1,5 @@
 from itertools import permutations
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from src.parameters.util_parameters.item_parameters import ItemParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -75,3 +75,14 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
                 smallest_area = params.compute_area()
                 smallest_area_params = params
         return smallest_area_params
+
+    def build_response(self) -> Dict[str]:
+        return {
+            'name': self.name,
+            'length': self.length,
+            'width': self.width,
+            'height': self.height,
+            'type': 'type',
+            'stack': self.can_stack,
+            'cant': self.can_cant,
+        }

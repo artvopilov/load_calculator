@@ -1,3 +1,6 @@
+from typing import Dict
+
+
 class Point:
     def __init__(self, x: int, y: int, z: int) -> None:
         self._x = x
@@ -38,3 +41,6 @@ class Point:
 
     def __str__(self):
         return f'Point: ({self.x}, {self.y}, {self.z})'
+
+    def build_response(self, shipment_params_id: int) -> Dict:
+        return {'x': self.x, 'y': self.y, 'z': self.z, 'cargo_id': shipment_params_id}

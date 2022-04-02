@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Optional
 
-from src.point import Point
+from src.items.point import Point
 
 
 class SpaceIterator(ABC):

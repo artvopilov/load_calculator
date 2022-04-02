@@ -33,13 +33,10 @@ class ItemFabric:
         self._current_id += 1
         return container_params
 
-    def create_container_params(self, container_request) -> ContainerParameters:
-        return self.create_container_params(container_request['length'], container_request['width'],
-                                            container_request['height'], container_request['weight'])
-
     def create_shipment_params(
             self,
             name: str,
+            form_type: str,
             length: int,
             width: int,
             height: int,
@@ -48,17 +45,7 @@ class ItemFabric:
             can_cant: bool,
             can_stack: bool
     ) -> ShipmentParameters:
-        shipment_params = ShipmentParameters(self._current_id, name, length, width, height, weight, color, can_cant, can_stack)
+        shipment_params = ShipmentParameters(self._current_id, name, form_type, length, width, height,
+                                             weight, color, can_cant, can_stack)
         self._current_id += 1
         return shipment_params
-
-    def create_shipment_params(self, cargo_request: Dict) -> ShipmentParameters:
-        length = cargo_request['length']
-        width = cargo_request['width']
-        height = cargo_request['height']
-        diameter = cargo_request['diameter']
-        if diameter:
-            length = diameter
-            width = diameter
-        return self.create_shipment_params(cargo_request['name'], length, width, height, cargo_request['weight'],
-                                           cargo_request['color'], cargo_request['cant'], cargo_request['stack'])

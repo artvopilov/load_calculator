@@ -7,6 +7,7 @@ from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 class ShipmentParameters(VolumeParameters, ItemParameters):
     _name: str
+    _form_type: str
     _weight: int
     _color: str
     _can_cant: bool
@@ -15,6 +16,7 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
     def __init__(self,
                  id_: int,
                  name: str,
+                 form_type: str,
                  length: int,
                  width: int,
                  height: int,
@@ -25,18 +27,23 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
         ItemParameters.__init__(self, id_)
         VolumeParameters.__init__(self, length, width, height)
         self._name = name
+        self._form_type = form_type
         self._weight = weight
         self._color = color
         self._can_cant = can_cant
         self._can_stack = can_stack
 
     def with_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
-        return ShipmentParameters(self.id, self.name, length, width, height, self.weight,
+        return ShipmentParameters(self.id, self.name, self.form_type, length, width, height, self.weight,
                                   self.color, self.can_cant, self._can_stack)
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def form_type(self) -> str:
+        return self._form_type
 
     @property
     def weight(self) -> int:
@@ -76,13 +83,13 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
                 smallest_area_params = params
         return smallest_area_params
 
-    def build_response(self) -> Dict[str]:
+    def build_response(self) -> Dict:
         return {
             'name': self.name,
             'length': self.length,
             'width': self.width,
             'height': self.height,
-            'type': 'type',
+            'type': self.form_type,
             'stack': self.can_stack,
             'cant': self.can_cant,
         }

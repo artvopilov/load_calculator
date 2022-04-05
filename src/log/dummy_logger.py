@@ -1,4 +1,4 @@
-from src.logging.logger import Logger
+from src.log.logger import Logger
 
 
 class DummyLogger(Logger):

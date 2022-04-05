@@ -23,10 +23,6 @@ class Shipment(Item[ShipmentParameters], VolumeItem):
         return self._parameters.color
 
     @property
-    def can_cant(self) -> bool:
-        return self._parameters.can_cant
-
-    @property
     def can_stack(self) -> bool:
         return self._parameters.can_stack
 

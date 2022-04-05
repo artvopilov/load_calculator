@@ -42,10 +42,12 @@ class ItemFabric:
             height: int,
             weight: int,
             color: str,
-            can_cant: bool,
-            can_stack: bool
+            can_stack: bool,
+            height_as_height: bool,
+            length_as_height: bool,
+            width_as_height: bool
     ) -> ShipmentParameters:
-        shipment_params = ShipmentParameters(self._current_id, name, form_type, length, width, height,
-                                             weight, color, can_cant, can_stack)
+        shipment_params = ShipmentParameters(self._current_id, name, form_type, length, width, height, weight, color,
+                                             can_stack, height_as_height, length_as_height, width_as_height)
         self._current_id += 1
         return shipment_params

@@ -35,18 +35,18 @@ class RequestParser:
         if diameter:
             length = diameter
             width = diameter
-        weight = cargo_request['weight'] if 'weight' in cargo_request else 1
-        cant = cargo_request['cant'] if 'cant' in cargo_request else True
         return self._item_fabric.create_shipment_params(
             cargo_request['name'],
             cargo_request['type'],
             length,
             width,
             height,
-            weight,
+            cargo_request['weight'],
             cargo_request['color'],
-            cant,
-            cargo_request['stack'])
+            cargo_request['stack'],
+            cargo_request['height_as_height'],
+            cargo_request['length_as_height'],
+            cargo_request['width_as_height'])
 
     def _create_container_params(self, container_request) -> ContainerParameters:
         return self._item_fabric.create_container_params(

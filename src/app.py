@@ -5,6 +5,7 @@ from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
 from src.api.request_parser import RequestParser
 from src.api.response_builder import ResponseBuilder
+from src.logging.dummy_logger import DummyLogger
 
 app = Flask(__name__)
 
@@ -23,7 +24,9 @@ def calculate():
     container_counts = request_parser.parse_container_counts(request)
 
     container_selector = ContainerSelector()
-    loader = Loader(container_counts, shipment_counts, item_fabric, container_selector)
+    logger = DummyLogger()
+
+    loader = Loader(container_counts, shipment_counts, item_fabric, container_selector, logger)
     loader.load()
 
     response_builder = ResponseBuilder()

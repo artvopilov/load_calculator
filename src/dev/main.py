@@ -9,7 +9,7 @@ from src.dev.testing_constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
 from src.items.item_fabric import ItemFabric
 from src.loading.container_selector import ContainerSelector
 from src.loading.loader import Loader
-from src.logging.console_logger import ConsoleLogger
+from src.log.console_logger import ConsoleLogger
 
 COLORS = list(mcolors.CSS4_COLORS.keys())
 

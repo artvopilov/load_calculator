@@ -1,11 +1,11 @@
 from flask import Flask, request
 
-from loading.container_selector import ContainerSelector
-from items.item_fabric import ItemFabric
-from loading.loader import Loader
-from api.request_parser import RequestParser
-from api.response_builder import ResponseBuilder
-from log.dummy_logger import DummyLogger
+from src.loading.container_selector import ContainerSelector
+from src.items.item_fabric import ItemFabric
+from src.loading.loader import Loader
+from src.api.request_parser import RequestParser
+from src.api.response_builder import ResponseBuilder
+from src.logging.dummy_logger import DummyLogger
 
 app = Flask(__name__)
 
@@ -31,9 +31,5 @@ def calculate():
 
     response_builder = ResponseBuilder()
     return response_builder.build(loader.containers, loader.shipments_counts)
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
 
 

@@ -10,7 +10,7 @@ from src.logging.dummy_logger import DummyLogger
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def hello_world():
     return "<h1>This is TLG Load Calculator API!</h1>" \
            "The API supports following routes:" \
@@ -20,7 +20,7 @@ def hello_world():
            "</ul>"
 
 
-@app.route('/calculate', methods=['POST'])
+@app.route('/calculate', methods=['GET'])
 def calculate():
     item_fabric = ItemFabric()
     request_parser = RequestParser(item_fabric)

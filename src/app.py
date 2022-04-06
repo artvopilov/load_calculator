@@ -14,13 +14,13 @@ app = Flask(__name__)
 def hello_world():
     return "<h1>This is TLG Load Calculator API!</h1>" \
            "The API supports following routes:" \
-           "<ul>" \
-           "    <li>/ [GET]</li>" \
-           "    <li>/calculate [POST]</li>" \
-           "</ul>"
+           "<ol>" \
+           "    <li>[GET] /</li>" \
+           "    <li>[POST] /calculate</li>" \
+           "</ol>"
 
 
-@app.route('/calculate', methods=['GET'])
+@app.route('/calculate', methods=['POST'])
 def calculate():
     item_fabric = ItemFabric()
     request_parser = RequestParser(item_fabric)

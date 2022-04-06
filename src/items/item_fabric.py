@@ -24,12 +24,13 @@ class ItemFabric:
 
     def create_container_params(
             self,
+            name: str,
             length: int,
             width: int,
             height: int,
             lifting_capacity: int
     ) -> ContainerParameters:
-        container_params = ContainerParameters(self._current_id, length, width, height, lifting_capacity)
+        container_params = ContainerParameters(self._current_id, name, length, width, height, lifting_capacity)
         self._current_id += 1
         return container_params
 

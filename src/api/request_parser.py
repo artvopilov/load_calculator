@@ -24,7 +24,7 @@ class RequestParser:
         container_counts = {}
         for container in request.json['containers']:
             container_params = self._create_container_params(container)
-            container_counts[container_params] = 1
+            container_counts[container_params] = container['number']
         return container_counts
 
     def _create_shipment_params(self, cargo_request: Dict) -> ShipmentParameters:
@@ -50,6 +50,7 @@ class RequestParser:
 
     def _create_container_params(self, container_request) -> ContainerParameters:
         return self._item_fabric.create_container_params(
+            container_request['type'],
             container_request['length'],
             container_request['width'],
             container_request['height'],

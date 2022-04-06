@@ -12,7 +12,12 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return "<p>This is Load Calculator!</p>"
+    return "<h1>This is TLG Load Calculator API!</h1>" \
+           "The API supports following routes:" \
+           "<ul>" \
+           "    <li>/ [GET]</li>" \
+           "    <li>/calculate [POST]</li>" \
+           "</ul>"
 
 
 @app.route('/calculate', methods=['POST'])

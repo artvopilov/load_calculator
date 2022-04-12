@@ -36,9 +36,3 @@ def calculate():
 
     response_builder = ResponseBuilder()
     return response_builder.build(loader.containers, loader.shipments_counts)
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
-
-

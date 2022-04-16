@@ -21,6 +21,8 @@ class RequestParser:
         return shipment_counts
 
     def parse_container_counts(self, request: Request) -> Dict:
+        if 'containers' not in request.json:
+            return {}
         container_counts = {}
         for container in request.json['containers']:
             container_params = self._create_container_params(container)

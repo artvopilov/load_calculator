@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
+from src.loading.container_selection_type import ContainerSelectionType
 from src.parameters.container_parameters import ContainerParameters
 
 

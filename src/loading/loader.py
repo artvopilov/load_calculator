@@ -1,5 +1,6 @@
 from typing import Dict, List, Tuple, Optional
 
+from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.items.item_fabric import ItemFabric
 from src.items.container import Container
@@ -12,6 +13,9 @@ from src.items.point import Point
 
 class Loader:
     _container_counts: Dict[ContainerParameters, int]
+    _auto_containers: List[ContainerParameters]
+    _container_selection_type: ContainerSelectionType
+
     _shipments_counts: Dict[ShipmentParameters, int]
 
     _load_item_fabric: ItemFabric
@@ -24,12 +28,16 @@ class Loader:
     def __init__(
             self,
             container_counts: Dict[ContainerParameters, int],
+            auto_containers: List[ContainerParameters],
+            container_selection_type: ContainerSelectionType,
             shipments_counts: Dict[ShipmentParameters, int],
             load_item_fabric: ItemFabric,
             container_selector: ContainerSelector,
             logger: Logger
     ) -> None:
         self._container_counts = container_counts
+        self._auto_containers = auto_containers
+        self._container_selection_type = container_selection_type
         self._shipments_counts = shipments_counts
         self._load_item_fabric = load_item_fabric
         self._container_selector = container_selector
@@ -83,7 +91,8 @@ class Loader:
         container = self._load_item_fabric.create_container(container_parameters)
         if self._load_shipment_into_container(shipment_params, container):
             self._containers.append(container)
-            self._container_counts[container_parameters] -= 1
+            if self._container_selection_type == ContainerSelectionType.FIXED:
+                self._container_counts[container_parameters] -= 1
             return True
         return False
 
@@ -96,6 +105,8 @@ class Loader:
         return self._container_selector.select_params(possible_container_params, shipments_volume, shipments_weight)
 
     def _get_possible_container_params(self) -> List[ContainerParameters]:
+        if self._container_selection_type == ContainerSelectionType.AUTO:
+            return self._auto_containers
         return list(map(lambda x: x[0], filter(lambda x: x[1] > 0, self._container_counts.items())))
 
     def _compute_shipments_weight_and_volume(self) -> Tuple[float, float]:

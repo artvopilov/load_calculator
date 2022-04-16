@@ -1,5 +1,7 @@
 from flask import Flask, request
 
+from src.api.constants import AUTO_CONTAINERS
+from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
@@ -31,7 +33,9 @@ def calculate():
     container_selector = ContainerSelector()
     logger = DummyLogger()
 
-    loader = Loader(container_counts, shipment_counts, item_fabric, container_selector, logger)
+    container_selection_type = ContainerSelectionType.FIXED if container_counts else ContainerSelectionType.AUTO
+    loader = Loader(container_counts, AUTO_CONTAINERS, container_selection_type,
+                    shipment_counts, item_fabric, container_selector, logger)
     loader.load()
 
     response_builder = ResponseBuilder()

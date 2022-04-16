@@ -5,8 +5,9 @@ import matplotlib.colors as mcolors
 import pandas as pd
 
 from src.dev.image_3d_creator import Image3dCreator
-from src.dev.testing_constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
+from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
 from src.items.item_fabric import ItemFabric
+from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.loading.loader import Loader
 from src.logging.console_logger import ConsoleLogger
@@ -34,7 +35,8 @@ def test_from_file() -> None:
     container_selector = ContainerSelector()
     logger = ConsoleLogger()
 
-    loader = Loader(CONTAINER_COUNTS, shipment_counts, item_fabric, container_selector, logger)
+    loader = Loader(CONTAINER_COUNTS, list(), ContainerSelectionType.FIXED,
+                    shipment_counts, item_fabric, container_selector, logger)
     test_loading(loader)
 
 
@@ -43,7 +45,8 @@ def test_from_constants() -> None:
     container_selector = ContainerSelector()
     logger = ConsoleLogger()
 
-    loader = Loader(CONTAINER_COUNTS, SHIPMENT_COUNTS, item_fabric, container_selector, logger)
+    loader = Loader(CONTAINER_COUNTS, list(), ContainerSelectionType.FIXED,
+                    SHIPMENT_COUNTS, item_fabric, container_selector, logger)
     test_loading(loader)
 
 

@@ -114,16 +114,11 @@ class Container(Item[ContainerParameters], VolumeItem):
     def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
         loading_max_p = self._compute_max_point(loading_p, shipment.parameters)
 
-        # insert point above
-        if shipment.can_stack:
-            new_point = loading_p.with_z(loading_max_p.z + 1)
-            new_max_point = loading_max_p.with_z(self.height - 1)
-            self._loadable_point_to_max_points[new_point].add(new_max_point)
-
         bottom_points, top_points = self._select_points_for_update(loading_p, loading_max_p)
 
         self._update_bottom_points(loading_p, loading_max_p, bottom_points)
-        self._update_top_points(loading_p, loading_max_p, top_points)
+        if shipment.can_stack:
+            self._update_top_points(loading_p, loading_max_p, top_points)
 
     def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> Tuple:
         bottom_points, top_points = [], []
@@ -176,8 +171,13 @@ class Container(Item[ContainerParameters], VolumeItem):
             self._loadable_point_to_max_points[new_p_y].add(max_p)
 
     def _update_top_points(self, loading_p: Point, loading_max_p: Point, points: List[Point]) -> None:
+        # insert point above
+        new_point = loading_p.with_z(loading_max_p.z + 1)
+        new_max_point = loading_max_p.with_z(self.height - 1)
+        self._loadable_point_to_max_points[new_point].add(new_max_point)
+        
         extension_points = defaultdict(set)
-        extension_points[loading_p.with_z(loading_max_p.z + 1)].add(loading_max_p.with_z(self.height - 1))
+        extension_points[new_point].add(new_max_point)
 
         cur_extension_points, cur_points_for_delete = self._extend_width_up(points, extension_points)
         self._process_cur_extension_points(extension_points, cur_extension_points, cur_points_for_delete)

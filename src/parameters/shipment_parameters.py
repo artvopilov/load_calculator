@@ -101,6 +101,7 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
             'width': self.width,
             'height': self.height,
             'type': self.form_type,
+            'color': self.color,
             'stack': self.can_stack,
             'height_as_height': self.height_as_height,
             'length_as_height': self.length_as_height,

@@ -11,7 +11,7 @@ class LoadablePointsIterator(SpaceIterator):
 
     def __init__(self, container: Container) -> None:
         super().__init__()
-        self._points = sorted(container.loadable_point_to_max_points.keys(), key=lambda p: (p.y, p.x, p.z))
+        self._points = sorted(container.loadable_point_to_max_points.keys(), key=lambda p: (p.x, p.y, p.z))
         # print('Loadable points:')
         # for p in self._points:
         #     print(p)

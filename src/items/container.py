@@ -175,7 +175,7 @@ class Container(Item[ContainerParameters], VolumeItem):
         new_point = loading_p.with_z(loading_max_p.z + 1)
         new_max_point = loading_max_p.with_z(self.height - 1)
         self._loadable_point_to_max_points[new_point].add(new_max_point)
-        
+
         extension_points = defaultdict(set)
         extension_points[new_point].add(new_max_point)
 

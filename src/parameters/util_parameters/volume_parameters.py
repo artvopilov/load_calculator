@@ -5,7 +5,7 @@ from src.items.point import Point
 
 
 class VolumeParameters(Parameters):
-    DEFAULT_EXTENSION: float = 0.1
+    DEFAULT_EXTENSION: float = 0.0
 
     _length: int
     _width: int

@@ -22,6 +22,7 @@ class ResponseBuilder:
                     if points_batch:
                         self.process_batch(points, points_batch, id_to_shipment_params, last_shipment_params)
                     last_shipment_params = shipment.parameters
+                    points_batch = []
 
                 point = container.id_to_min_point[shipment_id]
                 points_batch.append(point.build_response(shipment.parameters.id))
@@ -33,6 +34,8 @@ class ResponseBuilder:
             response['containers'][-1]['load_points'] = points
 
         for shipment_params, left_count in left_shipment_counts.items():
+            if left_count == 0:
+                continue
             response['left_cargos'].append(shipment_params.build_response())
             response['left_cargos'][-1]['number'] = left_count
 
@@ -46,5 +49,4 @@ class ResponseBuilder:
             last_shipment_params: ShipmentParameters
     ) -> None:
         points.append(points_batch)
-        points_batch.clear()
         id_to_shipment_params[last_shipment_params.id] = last_shipment_params.build_response()

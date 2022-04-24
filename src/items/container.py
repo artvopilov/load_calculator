@@ -85,10 +85,6 @@ class Container(Item[ContainerParameters], VolumeItem):
         last_shipment_id = self._shipment_id_order[-1]
         return self._id_to_shipment[last_shipment_id]
 
-    def get_point_above_shipment(self, shipment: Shipment) -> Point:
-        shipment_point = self._id_to_min_point[shipment.id]
-        return shipment_point.with_z(shipment_point.z + shipment.height)
-
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         if not self._volume_fits(point, shipment_params):
             return False

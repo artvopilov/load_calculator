@@ -5,6 +5,7 @@ from flask import Request
 from src.items.item_fabric import ItemFabric
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
+from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
 class RequestParser:
@@ -37,6 +38,9 @@ class RequestParser:
         if diameter:
             length = diameter
             width = diameter
+        extension = VolumeParameters.DEFAULT_EXTENSION
+        if 'extension' in cargo_request:
+            extension = cargo_request['extension']
         return self._item_fabric.create_shipment_params(
             cargo_request['name'],
             cargo_request['type'],
@@ -49,7 +53,7 @@ class RequestParser:
             cargo_request['height_as_height'],
             cargo_request['length_as_height'],
             cargo_request['width_as_height'],
-            0)
+            extension)
 
     def _create_container_params(self, container_request) -> ContainerParameters:
         return self._item_fabric.create_container_params(

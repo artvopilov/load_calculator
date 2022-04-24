@@ -28,7 +28,7 @@ def test_from_file() -> None:
     for n, c, s in zip(names, counts, sizes):
         length, width, height = list(map(lambda x: int(x), s.split('×')))
         shipment_params = item_fabric.create_shipment_params(n, 'type', length, width, height, 1,
-                                                             random.choice(COLORS), True, True, True, True, 0.5)
+                                                             random.choice(COLORS), True, True, True, True, 0.1)
         shipment_counts[shipment_params] = c
     print(f'Read {len(shipment_counts)} shipments')
 
@@ -59,7 +59,7 @@ def test_loading(loader: Loader) -> None:
     image_3d_creator = Image3dCreator(now)
     for container in containers:
         print(container)
-        image_3d_creator.create_iterative(container)
+        image_3d_creator.create(container)
     for shipment, count in left_shipment_counts.items():
         if count:
             print(f'Not loaded {shipment}: {count}')

@@ -65,7 +65,7 @@ class Loader:
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
             self._shipments_counts.keys(),
-            key=lambda s: [s.can_stack] + s.get_volume_params_best_variation() + [s.weight],
+            key=lambda s: [s.can_stack] + s.get_volume_params_sorted() + [s.weight],
             reverse=True))
 
     def _load_shipment_with_params(self, shipment_params: ShipmentParameters):

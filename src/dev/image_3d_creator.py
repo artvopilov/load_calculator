@@ -63,12 +63,6 @@ class Image3dCreator:
                 last_shipment_params = shipment.parameters
         shipments_iterations_num.append(len(container.shipment_id_order))
 
-        # pycharm shows only first n plots
-        # shipments_iterations_num_limited = np.random.choice(
-        #     shipments_iterations_num, min(len(shipments_iterations_num), 15), replace=False)
-        # np.append(shipments_iterations_num_limited, shipments_iterations_num[-1])
-        # shipments_iterations_num_limited.sort()
-
         for iter_num in tqdm(shipments_iterations_num):
             if iter_num == 0:
                 continue
@@ -78,6 +72,7 @@ class Image3dCreator:
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_aspect('auto')
+        ax.set_box_aspect((container.length, container.width, container.height))
 
         # self._plot_cubes(ax, container)
         poly_3d_collection = self._create_poly_3d_collection(container, shipments_num)

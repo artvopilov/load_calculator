@@ -90,11 +90,10 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
         if self.width_as_height:
             variations.append(self.with_volume_params(self.length, self.height, self.width))
             variations.append(self.with_volume_params(self.height, self.length, self.width))
-        return sorted(variations, key=lambda v: sorted([v.length, v.width, v.height]), reverse=True)
+        return sorted(variations, key=lambda v: [v.length, v.width, v.height], reverse=True)
 
-    def get_volume_params_best_variation(self) -> List[int]:
-        best_variation = self.get_volume_params_variations()[0]
-        return [best_variation.length, best_variation.width, best_variation.height]
+    def get_volume_params_sorted(self) -> List[int]:
+        return sorted([self.length, self.width, self.height], reverse=True)
 
     def build_response(self) -> Dict:
         return {

@@ -5,7 +5,7 @@ from src.parameters.container_parameters import ContainerParameters
 
 
 class ContainerSelector:
-    _CONTAINER_COEFFICIENT_THRESHOLD = 1.1
+    _CONTAINER_COEFFICIENT_THRESHOLD: float = 1.1
 
     def select_params(
             self,

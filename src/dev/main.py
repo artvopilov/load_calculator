@@ -16,7 +16,7 @@ COLORS = list(mcolors.CSS4_COLORS.keys())
 
 
 def test_from_file() -> None:
-    file_path = '/home/artem/Documents/Business/LoadCalculator/testCases/caseOne.ods'
+    file_path = '/Users/artemvopilov/Business/LoadCalculator/testCases/caseOne.ods'
     df = pd.read_excel(file_path, engine='odf', header=1, usecols=['Наименование', 'Упаковок', 'Размер коробки'],
                        skiprows=[2], skipfooter=1)
     names = df['Наименование']
@@ -28,7 +28,7 @@ def test_from_file() -> None:
     for n, c, s in zip(names, counts, sizes):
         length, width, height = list(map(lambda x: int(x), s.split('×')))
         shipment_params = item_fabric.create_shipment_params(n, 'type', length, width, height, 1,
-                                                             random.choice(COLORS), True, True, True, True)
+                                                             random.choice(COLORS), True, True, True, True, 0.5)
         shipment_counts[shipment_params] = c
     print(f'Read {len(shipment_counts)} shipments')
 
@@ -59,7 +59,7 @@ def test_loading(loader: Loader) -> None:
     image_3d_creator = Image3dCreator(now)
     for container in containers:
         print(container)
-        image_3d_creator.create(container)
+        image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():
         if count:
             print(f'Not loaded {shipment}: {count}')

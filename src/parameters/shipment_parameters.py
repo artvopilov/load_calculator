@@ -26,10 +26,11 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
             can_stack: bool,
             height_as_height: bool,
             length_as_height: bool,
-            width_as_height: bool
+            width_as_height: bool,
+            extension: float
     ) -> None:
         ItemParameters.__init__(self, id_, name)
-        VolumeParameters.__init__(self, length, width, height)
+        VolumeParameters.__init__(self, length, width, height, extension)
         self._form_type = form_type
         self._weight = weight
         self._color = color
@@ -41,7 +42,8 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
     def with_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
         return ShipmentParameters(self.id, self.name, self.form_type, length, width, height,
                                   self.weight, self.color, self._can_stack,
-                                  self._height_as_height, self._length_as_height, self._width_as_height)
+                                  self.height_as_height, self.length_as_height, self.width_as_height,
+                                  self.extension)
 
     @property
     def form_type(self) -> str:
@@ -72,7 +74,7 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
         return self._width_as_height
 
     def _key(self) -> Tuple:
-        return self.id, self.name, self.form_type, self.length, self.width, self.height, self.weight, self.color
+        return self.id, self.name, self.form_type, self.length, self.width, self.height, self.weight
 
     def __str__(self) -> str:
         return f'Shipment parameters: ({self._key()})'
@@ -106,4 +108,5 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
             'height_as_height': self.height_as_height,
             'length_as_height': self.length_as_height,
             'width_as_height': self.width_as_height,
+            'extension': self.extension,
         }

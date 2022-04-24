@@ -72,7 +72,10 @@ class Container(Item[ContainerParameters], VolumeItem):
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
-        self._id_to_min_point[shipment.id] = point
+        coefficient = shipment.parameters.extension / 2
+        x = int(point.x + shipment.parameters.length * coefficient)
+        y = int(point.y + shipment.parameters.width * coefficient)
+        self._id_to_min_point[shipment.id] = Point(x, y, point.z)
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
 
@@ -97,9 +100,9 @@ class Container(Item[ContainerParameters], VolumeItem):
         max_points = self._loadable_point_to_max_points[point]
         for max_point in max_points:
             v = VolumeParameters.from_points(point, max_point)
-            if v.length < shipment_params.length:
+            if v.length < shipment_params.get_extended_length():
                 continue
-            if v.width < shipment_params.width:
+            if v.width < shipment_params.get_extended_width():
                 continue
             if v.height < shipment_params.height:
                 continue
@@ -123,12 +126,11 @@ class Container(Item[ContainerParameters], VolumeItem):
     def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> Tuple:
         bottom_points, top_points = [], []
         for p in self._loadable_point_to_max_points.keys():
-            # bottom points which should be cropped
+            # bottom points which should be cropped or moved outside
             if p.z == loading_p.z and p.x <= loading_max_p.x and p.y <= loading_max_p.y:
                 bottom_points.append(p)
-            # top points
+            # top points which should be used for extension or can be extended
             elif p.z == loading_max_p.z + 1 and p.x <= loading_max_p.x + 1 and p.y <= loading_max_p.y + 1:
-                # should be used for extension or can be extended
                 top_points.append(p)
         return bottom_points, top_points
 
@@ -280,6 +282,6 @@ class Container(Item[ContainerParameters], VolumeItem):
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:
         return Point(
-            point.x + volume_parameters.length - 1,
-            point.y + volume_parameters.width - 1,
+            point.x + volume_parameters.get_extended_length() - 1,
+            point.y + volume_parameters.get_extended_width() - 1,
             point.z + volume_parameters.height - 1)

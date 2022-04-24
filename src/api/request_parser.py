@@ -48,7 +48,8 @@ class RequestParser:
             cargo_request['stack'],
             cargo_request['height_as_height'],
             cargo_request['length_as_height'],
-            cargo_request['width_as_height'])
+            cargo_request['width_as_height'],
+            0)
 
     def _create_container_params(self, container_request) -> ContainerParameters:
         return self._item_fabric.create_container_params(

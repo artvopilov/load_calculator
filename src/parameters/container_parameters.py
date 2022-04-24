@@ -9,7 +9,7 @@ class ContainerParameters(VolumeParameters, ItemParameters):
 
     def __init__(self, id_: int, name: str, length: int, width: int, height: int, lifting_capacity: int) -> None:
         ItemParameters.__init__(self, id_, name)
-        VolumeParameters.__init__(self, length, width, height)
+        VolumeParameters.__init__(self, length, width, height, 0)
         self._lifting_capacity = lifting_capacity
 
     @property

@@ -77,7 +77,7 @@ class Image3dCreator:
     def _create(self, container: Container, shipments_num: int) -> None:
         fig = plt.figure()
         ax = Axes3D(fig)
-        ax.set_aspect('equal')
+        ax.set_aspect('auto')
 
         # self._plot_cubes(ax, container)
         poly_3d_collection = self._create_poly_3d_collection(container, shipments_num)

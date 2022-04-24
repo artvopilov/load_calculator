@@ -113,7 +113,7 @@ class Loader:
         shipments_weight, shipments_volume = 0, 0
         for shipment_params, count in self._shipments_counts.items():
             shipments_weight += shipment_params.weight * count
-            shipments_volume += shipment_params.compute_volume() * count
+            shipments_volume += shipment_params.compute_extended_volume() * count
         return shipments_volume, shipments_weight
 
     def _load_shipment_into_container(self, shipment_params: ShipmentParameters, container: Container) -> bool:

@@ -49,10 +49,10 @@ class VolumeParameters(Parameters):
         return self._extension
 
     def get_extended_length(self) -> int:
-        return int(self.length * (1 + math.sqrt(self.extension)))
+        return int(self.length * math.sqrt((1 + self.extension)))
 
     def get_extended_width(self) -> int:
-        return int(self.width * (1 + math.sqrt(self.extension)))
+        return int(self.width * math.sqrt((1 + self.extension)))
 
     def _key(self) -> Tuple:
         return self.length, self.width, self.height, self.extension

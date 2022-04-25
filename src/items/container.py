@@ -80,9 +80,8 @@ class Container(Item[ContainerParameters], VolumeItem):
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
-        coefficient = shipment.parameters.extension / 2
-        x = int(point.x + shipment.parameters.length * coefficient)
-        y = int(point.y + shipment.parameters.width * coefficient)
+        x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
+        y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
         self._id_to_min_point[shipment.id] = Point(x, y, point.z)
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)

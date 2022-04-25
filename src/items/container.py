@@ -70,6 +70,14 @@ class Container(Item[ContainerParameters], VolumeItem):
                f'lifting_capacity={self.length}' \
                f')'
 
+    def build_response(self) -> Dict:
+        response = self.parameters.build_response()
+
+        volume = self.parameters.compute_volume()
+        loaded_volume = self._compute_loaded_volume()
+        response['loaded_volume_share'] = loaded_volume / volume
+        return response
+
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
         coefficient = shipment.parameters.extension / 2
@@ -281,3 +289,9 @@ class Container(Item[ContainerParameters], VolumeItem):
             point.x + volume_parameters.get_extended_length() - 1,
             point.y + volume_parameters.get_extended_width() - 1,
             point.z + volume_parameters.height - 1)
+
+    def _compute_loaded_volume(self) -> float:
+        loaded_volume = 0
+        for shipment in self._id_to_shipment.values():
+            loaded_volume += shipment.parameters.compute_extended_volume()
+        return loaded_volume

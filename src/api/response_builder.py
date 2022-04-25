@@ -29,7 +29,7 @@ class ResponseBuilder:
 
             self.process_batch(points, points_batch, id_to_shipment_params, last_shipment_params)
 
-            response['containers'].append(container.parameters.build_response())
+            response['containers'].append(container.build_response())
             response['containers'][-1]['cargos'] = id_to_shipment_params
             response['containers'][-1]['load_points'] = points
 

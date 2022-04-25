@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 
 from src.parameters.util_parameters.parameters import Parameters
@@ -48,10 +49,10 @@ class VolumeParameters(Parameters):
         return self._extension
 
     def get_extended_length(self) -> int:
-        return int(self.length * (1 + + self.extension))
+        return int(self.length * (1 + math.sqrt(self.extension)))
 
     def get_extended_width(self) -> int:
-        return int(self.width * (1 + + self.extension))
+        return int(self.width * (1 + math.sqrt(self.extension)))
 
     def _key(self) -> Tuple:
         return self.length, self.width, self.height, self.extension

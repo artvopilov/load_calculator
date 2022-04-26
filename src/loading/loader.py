@@ -5,7 +5,7 @@ from src.loading.container_selector import ContainerSelector
 from src.items.item_fabric import ItemFabric
 from src.items.container import Container
 from src.iterators.loadable_points_iterator import LoadablePointsIterator
-from src.logging.logger import Logger
+from src.logger.logger import Logger
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.items.point import Point

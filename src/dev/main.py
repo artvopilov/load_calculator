@@ -10,7 +10,7 @@ from src.items.item_fabric import ItemFabric
 from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.loading.loader import Loader
-from src.logging.console_logger import ConsoleLogger
+from src.logger.console_logger import ConsoleLogger
 
 COLORS = list(mcolors.CSS4_COLORS.keys())
 

@@ -88,6 +88,8 @@ class ShipmentParameters(VolumeParameters, NameParameters):
         if self.width_as_height:
             variations.append(self.with_volume_params(self.length, self.height, self.width))
             variations.append(self.with_volume_params(self.height, self.length, self.width))
+        if not self.can_stack:
+            return sorted(variations, key=lambda v: [v.height, v.length, v.width], reverse=True)
         return sorted(variations, key=lambda v: [v.length, v.width, v.height], reverse=True)
 
     def get_volume_params_sorted(self) -> List[int]:

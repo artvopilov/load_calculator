@@ -21,35 +21,3 @@ class ItemFabric:
         shipment = Shipment(shipment_parameters, self._current_id)
         self._current_id += 1
         return shipment
-
-    def create_container_params(
-            self,
-            name: str,
-            length: int,
-            width: int,
-            height: int,
-            lifting_capacity: int
-    ) -> ContainerParameters:
-        container_params = ContainerParameters(self._current_id, name, length, width, height, lifting_capacity)
-        self._current_id += 1
-        return container_params
-
-    def create_shipment_params(
-            self,
-            name: str,
-            form_type: str,
-            length: int,
-            width: int,
-            height: int,
-            weight: int,
-            color: str,
-            can_stack: bool,
-            height_as_height: bool,
-            length_as_height: bool,
-            width_as_height: bool,
-            extension: float
-    ) -> ShipmentParameters:
-        shipment_params = ShipmentParameters(self._current_id, name, form_type, length, width, height, weight, color,
-                                             can_stack, height_as_height, length_as_height, width_as_height, extension)
-        self._current_id += 1
-        return shipment_params

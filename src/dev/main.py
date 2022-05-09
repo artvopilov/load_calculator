@@ -11,6 +11,7 @@ from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.loading.loader import Loader
 from src.logger.console_logger import ConsoleLogger
+from src.parameters.shipment_parameters import ShipmentParameters
 
 COLORS = list(mcolors.CSS4_COLORS.keys())
 
@@ -23,16 +24,16 @@ def test_from_file() -> None:
     counts = df['Упаковок']
     sizes = df['Размер коробки']
 
-    item_fabric = ItemFabric()
     shipment_counts = {}
     for n, c, s in zip(names, counts, sizes):
         length, width, height = list(map(lambda x: int(x), s.split('×')))
-        shipment_params = item_fabric.create_shipment_params(n, 'type', length, width, height, 1,
-                                                             random.choice(COLORS), True, True, True, True, 0.1)
+        shipment_params = ShipmentParameters(n, 'type', length, width, height, 1,
+                                             random.choice(COLORS), True, True, True, True, 0.1)
         shipment_counts[shipment_params] = c
     print(f'Read {len(shipment_counts)} shipments')
 
     container_selector = ContainerSelector()
+    item_fabric = ItemFabric()
     logger = ConsoleLogger()
 
     loader = Loader(CONTAINER_COUNTS, list(), ContainerSelectionType.FIXED,
@@ -66,4 +67,4 @@ def test_loading(loader: Loader) -> None:
 
 
 if __name__ == '__main__':
-    test_from_file()
+    test_from_constants()

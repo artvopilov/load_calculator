@@ -2,17 +2,14 @@ from typing import Dict
 
 from flask import Request
 
-from src.items.item_fabric import ItemFabric
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
 class RequestParser:
-    _item_fabric: ItemFabric
-
-    def __init__(self, item_fabric: ItemFabric) -> None:
-        self._item_fabric = item_fabric
+    def __init__(self) -> None:
+        pass
 
     def parse_shipment_counts(self, request: Request) -> Dict:
         shipment_counts = {}
@@ -41,7 +38,7 @@ class RequestParser:
         extension = VolumeParameters.DEFAULT_EXTENSION
         if 'extension' in cargo_request:
             extension = cargo_request['extension']
-        return self._item_fabric.create_shipment_params(
+        return ShipmentParameters(
             cargo_request['name'],
             cargo_request['type'],
             length,
@@ -55,8 +52,8 @@ class RequestParser:
             cargo_request['width_as_height'],
             extension)
 
-    def _create_container_params(self, container_request) -> ContainerParameters:
-        return self._item_fabric.create_container_params(
+    def _create_container_params(self, container_request: Dict) -> ContainerParameters:
+        return ContainerParameters(
             container_request['type'],
             container_request['length'],
             container_request['width'],

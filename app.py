@@ -24,13 +24,12 @@ def hello_world():
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    item_fabric = ItemFabric()
-    request_parser = RequestParser(item_fabric)
-
+    request_parser = RequestParser()
     shipment_counts = request_parser.parse_shipment_counts(request)
     container_counts = request_parser.parse_container_counts(request)
 
     container_selector = ContainerSelector()
+    item_fabric = ItemFabric()
     logger = DummyLogger()
 
     container_selection_type = ContainerSelectionType.FIXED if container_counts else ContainerSelectionType.AUTO

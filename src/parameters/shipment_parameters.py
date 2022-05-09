@@ -1,10 +1,10 @@
 from typing import Tuple, List, Dict
 
-from src.parameters.util_parameters.item_parameters import ItemParameters
+from src.parameters.util_parameters.item_parameters import NameParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
 
 
-class ShipmentParameters(VolumeParameters, ItemParameters):
+class ShipmentParameters(VolumeParameters, NameParameters):
     _form_type: str
     _weight: int
     _color: str
@@ -15,7 +15,6 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
 
     def __init__(
             self,
-            id_: int,
             name: str,
             form_type: str,
             length: int,
@@ -29,7 +28,7 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
             width_as_height: bool,
             extension: float
     ) -> None:
-        ItemParameters.__init__(self, id_, name)
+        NameParameters.__init__(self, name)
         VolumeParameters.__init__(self, length, width, height, extension)
         self._form_type = form_type
         self._weight = weight
@@ -40,9 +39,8 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
         self._width_as_height = width_as_height
 
     def with_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
-        return ShipmentParameters(self.id, self.name, self.form_type, length, width, height,
-                                  self.weight, self.color, self._can_stack,
-                                  self.height_as_height, self.length_as_height, self.width_as_height,
+        return ShipmentParameters(self.name, self.form_type, length, width, height, self.weight, self.color,
+                                  self._can_stack, self.height_as_height, self.length_as_height, self.width_as_height,
                                   self.extension)
 
     @property
@@ -74,7 +72,7 @@ class ShipmentParameters(VolumeParameters, ItemParameters):
         return self._width_as_height
 
     def _key(self) -> Tuple:
-        return self.id, self.name, self.form_type, self.length, self.width, self.height, self.weight
+        return self.name, self.form_type, self.length, self.width, self.height, self.weight
 
     def __str__(self) -> str:
         return f'Shipment parameters: ({self._key()})'

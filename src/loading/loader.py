@@ -70,26 +70,24 @@ class Loader:
 
     def _load_shipment_with_params(self, shipment_params: ShipmentParameters):
         shipment_params_variations = shipment_params.get_volume_params_variations()
-        for v in shipment_params_variations:
-            self._logger.info(f'Loading variation: {v}')
-            if self._load_into_existing_container(v):
-                return True
-            if self._load_into_new_container(v):
-                return True
+        if self._load_into_existing_container(shipment_params_variations):
+            return True
+        if self._load_into_new_container(shipment_params_variations):
+            return True
         return False
 
-    def _load_into_existing_container(self, shipment_params: ShipmentParameters) -> bool:
+    def _load_into_existing_container(self, shipment_params_variations: List[ShipmentParameters]) -> bool:
         for container in self._containers:
-            if self._load_shipment_into_container(shipment_params, container):
+            if self._load_shipment_into_container(shipment_params_variations, container):
                 return True
         return False
 
-    def _load_into_new_container(self, shipment_params: ShipmentParameters) -> bool:
+    def _load_into_new_container(self, shipment_params_variations: List[ShipmentParameters]) -> bool:
         container_parameters = self._select_next_container_parameters()
         if not container_parameters:
             return False
         container = self._load_item_fabric.create_container(container_parameters)
-        if self._load_shipment_into_container(shipment_params, container):
+        if self._load_shipment_into_container(shipment_params_variations, container):
             self._containers.append(container)
             if self._container_selection_type == ContainerSelectionType.FIXED:
                 self._container_counts[container_parameters] -= 1
@@ -116,21 +114,32 @@ class Loader:
             shipments_volume += shipment_params.compute_extended_volume() * count
         return shipments_volume, shipments_weight
 
-    def _load_shipment_into_container(self, shipment_params: ShipmentParameters, container: Container) -> bool:
+    def _load_shipment_into_container(
+            self,
+            shipment_params_variations: List[ShipmentParameters],
+            container: Container
+    ) -> bool:
         self._logger.info("Selecting loading point")
-        loading_point = self._select_loading_point(shipment_params, container)
-        if loading_point:
+        loading_point_and_shipment_params = self._select_loading_point(shipment_params_variations, container)
+        if loading_point_and_shipment_params:
+            loading_point, shipment_params = loading_point_and_shipment_params
             self._logger.info(f"Loading point found {loading_point}, loading")
             shipment = self._load_item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
             return True
         return False
 
-    def _select_loading_point(self, shipment_params: ShipmentParameters, container: Container) -> Optional[Point]:
+    def _select_loading_point(
+            self,
+            shipment_params_variations: List[ShipmentParameters],
+            container: Container
+    ) -> Optional[Tuple[Point, ShipmentParameters]]:
         self._logger.info("Iterating container")
         for point in LoadablePointsIterator(container):
             # self._logger.info(f"Checking point {point}")
-            can_load = container.can_load_into_point(point, shipment_params)
-            if can_load:
-                return point
+            for shipment_params in shipment_params_variations:
+                # self._logger.info(f'Loading variation: {shipment_params}')
+                can_load = container.can_load_into_point(point, shipment_params)
+                if can_load:
+                    return point, shipment_params
         return None

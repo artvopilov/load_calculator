@@ -49,16 +49,17 @@ class VolumeParameters(Parameters):
         return self._extension
 
     def get_extended_length(self) -> int:
-        return int(self.length * math.sqrt((1 + self.extension)))
+        extended_area = self.compute_extended_area()
+        area_extension = extended_area / self.compute_area()
+        return int(self.length * math.sqrt(area_extension))
 
     def get_extended_width(self) -> int:
-        return int(self.width * math.sqrt((1 + self.extension)))
+        extended_area = self.compute_extended_area()
+        area_extension = extended_area / self.compute_area()
+        return int(self.width * math.sqrt(area_extension))
 
-    def _key(self) -> Tuple:
-        return self.length, self.width, self.height, self.extension
-
-    def __str__(self) -> str:
-        return f'Volume parameters: ({self._key()})'
+    def get_extended_height(self) -> int:
+        return int(self.height * (1 - self.extension))
 
     def compute_volume(self) -> int:
         return self.compute_area() * self.height
@@ -70,6 +71,14 @@ class VolumeParameters(Parameters):
         return self.compute_extended_area() * self.height
 
     def compute_extended_area(self) -> float:
-        return self.get_extended_length() * self.get_extended_width()
+        volume = self.compute_volume()
+        extended_height = self.get_extended_height()
+        return volume / extended_height
+
+    def _key(self) -> Tuple:
+        return self.length, self.width, self.height, self.extension
+
+    def __str__(self) -> str:
+        return f'Volume parameters: ({self._key()})'
 
 

@@ -4,7 +4,8 @@ from src.parameters.container_parameters import ContainerParameters
 
 
 class ContainerSelector:
-    _CONTAINER_COEFFICIENT_THRESHOLD: float = 1.1
+    _CONTAINER_VOLUME_COEFFICIENT_THRESHOLD: float = 1.1
+    _CONTAINER_WEIGHT_COEFFICIENT_THRESHOLD: float = 1.0
 
     def select_params(
             self,
@@ -15,8 +16,8 @@ class ContainerSelector:
         selected_params = None
         selected_volume_c, selected_weight_c = 0, 0
         for params in possible_params:
-            volume_c = params.compute_volume() / volume
-            weight_c = params.lifting_capacity / weight
+            volume_c = params.compute_volume() / volume / self._CONTAINER_VOLUME_COEFFICIENT_THRESHOLD
+            weight_c = params.lifting_capacity / weight / self._CONTAINER_WEIGHT_COEFFICIENT_THRESHOLD
             if self._should_use_params(selected_weight_c, selected_volume_c, weight_c, volume_c):
                 selected_params = params
                 selected_weight_c, selected_volume_c = weight_c, volume_c
@@ -31,10 +32,10 @@ class ContainerSelector:
     ) -> bool:
         min_selected_c = min(selected_weight_c, selected_volume_c)
         min_c = min(weight_c, volume_c)
-        if min_selected_c < self._CONTAINER_COEFFICIENT_THRESHOLD:
+        if min_selected_c < 1:
             if min_c > min_selected_c:
                 return True
-        elif min_c > self._CONTAINER_COEFFICIENT_THRESHOLD:
+        elif min_c > 1:
             if weight_c + volume_c < selected_weight_c + selected_volume_c:
                 return True
         return False

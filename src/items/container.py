@@ -55,10 +55,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._id_to_min_point
 
     @property
-    def min_point_to_id(self) -> Dict[Point, int]:
-        return self._min_point_to_id
-
-    @property
     def id_to_shipment(self) -> Dict[int, Shipment]:
         return self._id_to_shipment
 
@@ -67,7 +63,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._shipment_id_order
 
     def calculate_point_loading_order(self) -> List[Point]:
-        return sorted(self.min_point_to_id.keys(), key=lambda p: [p.x, p.y, p.z])
+        return sorted(self._min_point_to_id.keys(), key=lambda p: [p.x, p.y, p.z])
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
@@ -100,12 +96,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         # self._min_point_to_id[Point(x, y, point.z)] = shipment.id
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
-
-    def get_last_loaded_shipment(self) -> Optional[Shipment]:
-        if not self._shipment_id_order:
-            return None
-        last_shipment_id = self._shipment_id_order[-1]
-        return self._id_to_shipment[last_shipment_id]
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         if not self._volume_fits(point, shipment_params):

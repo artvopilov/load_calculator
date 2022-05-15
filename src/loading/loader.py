@@ -136,10 +136,10 @@ class Loader:
             container: Container
     ) -> Optional[Tuple[Point, ShipmentParameters]]:
         self._logger.info("Iterating container")
-        for point in LoadablePointsIterator(container):
-            # self._logger.info(f"Checking point {point}")
-            for shipment_params in shipment_params_variations:
-                # self._logger.info(f'Loading variation: {shipment_params}')
+        for shipment_params in shipment_params_variations:
+            # self._logger.info(f'Loading variation: {shipment_params}')
+            for point in LoadablePointsIterator(container):
+                # self._logger.info(f"Checking point {point}")
                 can_load = container.can_load_into_point(point, shipment_params)
                 if can_load:
                     return point, shipment_params

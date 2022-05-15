@@ -61,7 +61,7 @@ def test_loading(loader: Loader) -> None:
     for container in containers:
         print(container)
         print(len(container.shipment_id_order))
-        image_3d_creator.create(container)
+        image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():
         if count:
             print(f'Not loaded {shipment}: {count}')

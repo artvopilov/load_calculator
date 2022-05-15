@@ -56,6 +56,9 @@ class Image3dCreator:
     def create_iterative(self, container: Container) -> None:
         shipments_iterations_num = []
         last_shipment_params = None
+
+        # for n, point in enumerate(container.calculate_point_loading_order()):
+        #     shipment_id = container.min_point_to_id[point]
         for n, shipment_id in enumerate(container.shipment_id_order):
             shipment = container.id_to_shipment[shipment_id]
             if shipment.parameters != last_shipment_params:
@@ -94,6 +97,8 @@ class Image3dCreator:
         cubes = []
         colors = []
 
+        # for point in container.calculate_point_loading_order()[:shipments_num]:
+        #     shipment_id = container.min_point_to_id[point]
         for shipment_id in container.shipment_id_order[:shipments_num]:
             point = container.id_to_min_point[shipment_id]
             shipment = container.id_to_shipment[shipment_id]

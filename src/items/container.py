@@ -17,6 +17,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
 
     _id_to_min_point: Dict[int, Point]
+    _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
     _shipment_id_order: List[int]
 
@@ -34,6 +35,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
         self._id_to_shipment = {}
         self._id_to_min_point = {}
+        self._min_point_to_id = {}
         self._shipment_id_order = []
 
     @property
@@ -53,12 +55,19 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._id_to_min_point
 
     @property
+    def min_point_to_id(self) -> Dict[Point, int]:
+        return self._min_point_to_id
+
+    @property
     def id_to_shipment(self) -> Dict[int, Shipment]:
         return self._id_to_shipment
 
     @property
     def shipment_id_order(self) -> List[int]:
         return self._shipment_id_order
+
+    def calculate_point_loading_order(self) -> List[Point]:
+        return sorted(self.min_point_to_id.keys(), key=lambda p: [p.x, p.y, p.z])
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
@@ -88,6 +97,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
         y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
         self._id_to_min_point[shipment.id] = Point(x, y, point.z)
+        # self._min_point_to_id[Point(x, y, point.z)] = shipment.id
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
 

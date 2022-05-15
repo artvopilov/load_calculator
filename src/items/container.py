@@ -3,6 +3,7 @@ from typing import Dict, Tuple, List, Optional, Set, DefaultDict
 
 from src.items.shipment import Shipment
 from src.items.util_items.item import Item
+from src.items.util_items.name_item import NameItem
 from src.items.util_items.volume_item import VolumeItem
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -10,7 +11,7 @@ from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.items.point import Point
 
 
-class Container(Item[ContainerParameters], VolumeItem):
+class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
 
     _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
@@ -22,6 +23,7 @@ class Container(Item[ContainerParameters], VolumeItem):
     def __init__(self, parameters: ContainerParameters, id_: int):
         Item.__init__(self, id_)
         VolumeItem.__init__(self, parameters)
+        NameItem.__init__(self, parameters)
 
         self._parameters = parameters
 
@@ -64,6 +66,7 @@ class Container(Item[ContainerParameters], VolumeItem):
     def __str__(self) -> str:
         return f'Container: (' \
                f'id={self.id}; ' \
+               f'name={self.name}; ' \
                f'length={self.length}; ' \
                f'width={self.width}; ' \
                f'height={self.height}; ' \
@@ -72,11 +75,13 @@ class Container(Item[ContainerParameters], VolumeItem):
 
     def build_response(self) -> Dict:
         response = self.parameters.build_response()
-
         volume = self.parameters.compute_volume()
         loaded_volume = self._compute_loaded_volume()
         response['loaded_volume_share'] = loaded_volume / volume
         return response
+
+    def compute_loaded_volume(self) -> float:
+        return sum(list(map(lambda s: s.parameters.compute_extended_volume(), self._id_to_shipment.values())))
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)

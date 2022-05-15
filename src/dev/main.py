@@ -5,7 +5,7 @@ import matplotlib.colors as mcolors
 import pandas as pd
 
 from src.dev.image_3d_creator import Image3dCreator
-from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
+from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS, AUTO_CONTAINERS
 from src.items.item_fabric import ItemFabric
 from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
@@ -46,7 +46,7 @@ def test_from_constants() -> None:
     container_selector = ContainerSelector()
     logger = ConsoleLogger()
 
-    loader = Loader(CONTAINER_COUNTS, list(), ContainerSelectionType.FIXED,
+    loader = Loader(CONTAINER_COUNTS, AUTO_CONTAINERS, ContainerSelectionType.FIXED,
                     SHIPMENT_COUNTS, item_fabric, container_selector, logger)
     test_loading(loader)
 
@@ -60,7 +60,8 @@ def test_loading(loader: Loader) -> None:
     image_3d_creator = Image3dCreator(now)
     for container in containers:
         print(container)
-        image_3d_creator.create_iterative(container)
+        print(len(container.shipment_id_order))
+        image_3d_creator.create(container)
     for shipment, count in left_shipment_counts.items():
         if count:
             print(f'Not loaded {shipment}: {count}')

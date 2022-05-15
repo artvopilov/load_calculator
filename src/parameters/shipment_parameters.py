@@ -12,6 +12,7 @@ class ShipmentParameters(VolumeParameters, NameParameters):
     _height_as_height: bool
     _length_as_height: bool
     _width_as_height: bool
+    _variations: List['ShipmentParameters']
 
     def __init__(
             self,
@@ -37,6 +38,7 @@ class ShipmentParameters(VolumeParameters, NameParameters):
         self._height_as_height = height_as_height
         self._length_as_height = length_as_height
         self._width_as_height = width_as_height
+        self._variations = []
 
     def with_volume_params(self, length: int, width: int, height: int) -> 'ShipmentParameters':
         return ShipmentParameters(self.name, self.form_type, length, width, height, self.weight, self.color,
@@ -71,26 +73,10 @@ class ShipmentParameters(VolumeParameters, NameParameters):
     def width_as_height(self) -> bool:
         return self._width_as_height
 
-    def _key(self) -> Tuple:
-        return self.name, self.form_type, self.length, self.width, self.height, self.weight
-
-    def __str__(self) -> str:
-        return f'Shipment parameters: ({self._key()})'
-
     def get_volume_params_variations(self) -> List['ShipmentParameters']:
-        variations = []
-        if self.height_as_height:
-            variations.append(self.with_volume_params(self.length, self.width, self.height))
-            variations.append(self.with_volume_params(self.width, self.length, self.height))
-        if self.length_as_height:
-            variations.append(self.with_volume_params(self.height, self.width, self.length))
-            variations.append(self.with_volume_params(self.width, self.height, self.length))
-        if self.width_as_height:
-            variations.append(self.with_volume_params(self.length, self.height, self.width))
-            variations.append(self.with_volume_params(self.height, self.length, self.width))
-        if not self.can_stack:
-            return sorted(variations, key=lambda v: [v.height, v.length, v.width], reverse=True)
-        return sorted(variations, key=lambda v: [v.length, v.width, v.height], reverse=True)
+        if not self._variations:
+            self._create_volume_params_variations()
+        return self._variations
 
     def get_volume_params_sorted(self) -> List[int]:
         return sorted([self.length, self.width, self.height], reverse=True)
@@ -109,3 +95,25 @@ class ShipmentParameters(VolumeParameters, NameParameters):
             'width_as_height': self.width_as_height,
             'extension': self.extension,
         }
+
+    def _create_volume_params_variations(self) -> None:
+        if self.height_as_height:
+            self._variations.append(self.with_volume_params(self.length, self.width, self.height))
+            self._variations.append(self.with_volume_params(self.width, self.length, self.height))
+        if self.length_as_height:
+            self._variations.append(self.with_volume_params(self.height, self.width, self.length))
+            self._variations.append(self.with_volume_params(self.width, self.height, self.length))
+        if self.width_as_height:
+            self._variations.append(self.with_volume_params(self.length, self.height, self.width))
+            self._variations.append(self.with_volume_params(self.height, self.length, self.width))
+
+        if not self.can_stack:
+            self._variations.sort(key=lambda v: [v.height, v.length, v.width], reverse=True)
+        else:
+            self._variations.sort(key=lambda v: [v.length, v.width, v.height], reverse=True)
+
+    def _key(self) -> Tuple:
+        return self.name, self.form_type, self.length, self.width, self.height, self.weight
+
+    def __str__(self) -> str:
+        return f'Shipment parameters: ({self._key()})'

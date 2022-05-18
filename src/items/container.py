@@ -55,6 +55,10 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._id_to_min_point
 
     @property
+    def min_point_to_id(self) -> Dict[Point, int]:
+        return self._min_point_to_id
+
+    @property
     def id_to_shipment(self) -> Dict[int, Shipment]:
         return self._id_to_shipment
 
@@ -63,7 +67,12 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._shipment_id_order
 
     def calculate_point_loading_order(self) -> List[Point]:
-        return sorted(self._min_point_to_id.keys(), key=lambda p: [p.x, p.y, p.z])
+        return sorted(self._min_point_to_id.keys(), key=lambda p: self._get_loading_point_order_key(p))
+
+    def _get_loading_point_order_key(self, point: Point) -> Tuple:
+        # shipment = self.id_to_shipment[self._min_point_to_id[point]]
+        # max_point = self._compute_max_point(point, shipment.parameters)
+        return point.x, point.y, point.z
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
@@ -90,10 +99,12 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
-        x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
-        y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
-        self._id_to_min_point[shipment.id] = Point(x, y, point.z)
+        # x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
+        # y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
+        # self._id_to_min_point[shipment.id] = Point(x, y, point.z)
         # self._min_point_to_id[Point(x, y, point.z)] = shipment.id
+        self._id_to_min_point[shipment.id] = point
+        self._min_point_to_id[point] = shipment.id
         self._id_to_shipment[shipment.id] = shipment
         self._shipment_id_order.append(shipment.id)
 

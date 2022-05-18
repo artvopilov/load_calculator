@@ -4,6 +4,7 @@ from typing import Dict, List
 from flask import jsonify, Response
 
 from src.items.container import Container
+from src.items.point import Point
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
@@ -16,7 +17,9 @@ class ResponseBuilder:
             id_to_shipment_params = {}
             points = []
             points_batch = []
-            for shipment_id in container.shipment_id_order:
+            for n, point in enumerate(container.calculate_point_loading_order()):
+                shipment_id = container.min_point_to_id[point]
+            # for shipment_id in container.shipment_id_order:
                 shipment = container.id_to_shipment[shipment_id]
 
                 if shipment.parameters != last_shipment_params:
@@ -27,8 +30,13 @@ class ResponseBuilder:
                     last_shipment_params_id += 1
                     points_batch = []
 
-                point = container.id_to_min_point[shipment_id]
-                points_batch.append(point.build_response(last_shipment_params_id))
+                # point = container.id_to_min_point[shipment_id]
+
+                x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
+                y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
+                point_e = Point(x, y, point.z)
+
+                points_batch.append(point_e.build_response(last_shipment_params_id))
 
             self.process_batch(points, points_batch, id_to_shipment_params, last_shipment_params, last_shipment_params_id)
 

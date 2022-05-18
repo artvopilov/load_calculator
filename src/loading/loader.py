@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, Optional
 from src.items.container import Container
 from src.items.item_fabric import ItemFabric
 from src.items.point import Point
-from src.iterators.loadable_points_iterator import LoadablePointsIterator
+from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
 from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.container_selector import ContainerSelector
 from src.logger.logger import Logger
@@ -138,7 +138,7 @@ class Loader:
         self._logger.info("Iterating container")
         for shipment_params in shipment_params_variations:
             # self._logger.info(f'Loading variation: {shipment_params}')
-            for point in LoadablePointsIterator(container):
+            for point in HorizontalPointsIterator(container.loadable_point_to_max_points.keys()):
                 # self._logger.info(f"Checking point {point}")
                 can_load = container.can_load_into_point(point, shipment_params)
                 if can_load:

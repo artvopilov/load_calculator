@@ -1,17 +1,17 @@
-from typing import Optional, List
+from abc import abstractmethod, ABC
+from typing import Optional, List, Tuple, Iterable
 
-from src.items.container import Container
-from src.iterators.space_iterator import SpaceIterator
 from src.items.point import Point
+from src.iterators.space_iterator import SpaceIterator
 
 
-class LoadablePointsIterator(SpaceIterator):
+class PointsIterator(SpaceIterator, ABC):
     _points: List[Point]
     _i: int
 
-    def __init__(self, container: Container) -> None:
+    def __init__(self, points: Iterable[Point]) -> None:
         super().__init__()
-        self._points = sorted(container.loadable_point_to_max_points.keys(), key=lambda p: (p.z, p.x, p.y))
+        self._points = sorted(points, key=lambda p: self._get_point_order_key(p))
         # print('Loadable points:')
         # for p in self._points:
         #     print(p)
@@ -27,3 +27,7 @@ class LoadablePointsIterator(SpaceIterator):
         if self._i < len(self._points):
             return self._points[self._i]
         return None
+
+    @abstractmethod
+    def _get_point_order_key(self, point: Point) -> Tuple:
+        pass

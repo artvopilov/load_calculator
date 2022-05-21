@@ -57,7 +57,6 @@ def test_loading(loader: Loader) -> None:
     image_3d_creator = Image3dCreator(now)
     for container in containers:
         print(container)
-        print(len(container.shipment_id_order))
         image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():
         if count:

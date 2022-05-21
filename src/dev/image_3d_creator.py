@@ -70,7 +70,7 @@ class Image3dCreator:
 
                 shipments_iterations_num.append(n)
                 last_shipment_params = shipment.parameters
-        shipments_iterations_num.append(len(container.shipment_id_order))
+        shipments_iterations_num.append(len(container.id_to_shipment))
 
         for iter_num in tqdm(shipments_iterations_num):
             if iter_num == 0:

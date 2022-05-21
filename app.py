@@ -34,6 +34,7 @@ def calculate():
 
     loader = Loader(container_counts, shipment_counts, item_fabric, logger)
     loader.load()
+    loader.calculate_loading_order()
 
     response_builder = ResponseBuilder()
     return response_builder.build(loader.get_loaded_containers(), loader.get_left_shipments_counts())

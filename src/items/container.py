@@ -77,8 +77,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     def build_response(self) -> Dict:
         response = self.parameters.build_response()
         volume = self.parameters.compute_volume()
-        loaded_volume = self._compute_loaded_volume()
-        response['loaded_volume_share'] = loaded_volume / volume
+        response['loaded_volume_share'] = self._loaded_volume / volume
         return response
 
     def get_loaded_volume(self) -> float:
@@ -302,9 +301,3 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
             point.x + volume_parameters.get_extended_length() - 1,
             point.y + volume_parameters.get_extended_width() - 1,
             point.z + volume_parameters.height - 1)
-
-    def _compute_loaded_volume(self) -> float:
-        loaded_volume = 0
-        for shipment in self._shipment_id_to_shipment.values():
-            loaded_volume += shipment.parameters.compute_extended_volume()
-        return loaded_volume

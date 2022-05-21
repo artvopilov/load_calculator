@@ -14,8 +14,10 @@ from src.items.point import Point
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
     _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
-    _min_point_to_id: Dict[Point, int]
-    _id_to_shipment: Dict[int, Shipment]
+    _shipment_id_to_min_point: Dict[int, Point]
+    _min_point_to_shipment_id: Dict[Point, int]
+    _shipment_id_to_shipment: Dict[int, Shipment]
+    _shipment_id_order: List[int]
     _loaded_volume: float
 
     def __init__(self, parameters: ContainerParameters, id_: int):
@@ -24,8 +26,10 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         NameItem.__init__(self, parameters)
         self._parameters = parameters
         self._loadable_point_to_max_points = defaultdict(set)
-        self._id_to_shipment = {}
-        self._min_point_to_id = {}
+        self._shipment_id_to_min_point = {}
+        self._min_point_to_shipment_id = {}
+        self._shipment_id_to_shipment = {}
+        self._shipment_id_order = []
         self._loaded_volume = 0
         self._insert_first_loadable_point()
 
@@ -42,12 +46,20 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._loadable_point_to_max_points
 
     @property
-    def min_point_to_id(self) -> Dict[Point, int]:
-        return self._min_point_to_id
+    def shipment_id_to_min_point(self) -> Dict[int, Point]:
+        return self._shipment_id_to_min_point
 
     @property
-    def id_to_shipment(self) -> Dict[int, Shipment]:
-        return self._id_to_shipment
+    def min_point_to_shipment_id(self) -> Dict[Point, int]:
+        return self._min_point_to_shipment_id
+
+    @property
+    def shipment_id_to_shipment(self) -> Dict[int, Shipment]:
+        return self._shipment_id_to_shipment
+
+    @property
+    def shipment_id_order(self) -> List[int]:
+        return self._shipment_id_order
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
@@ -74,13 +86,20 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
-        # x = int(point.x + (shipment.parameters.get_extended_length() - shipment.parameters.length) / 2)
-        # y = int(point.y + (shipment.parameters.get_extended_width() - shipment.parameters.width) / 2)
-        # self._id_to_min_point[shipment.id] = Point(x, y, point.z)
-        # self._min_point_to_id[Point(x, y, point.z)] = shipment.id
-        self._min_point_to_id[point] = shipment.id
-        self._id_to_shipment[shipment.id] = shipment
+        self._shipment_id_to_min_point[shipment.id] = point
+        self._min_point_to_shipment_id[point] = shipment.id
+        self._shipment_id_to_shipment[shipment.id] = shipment
+        self._shipment_id_order.append(shipment.id)
         self._loaded_volume += shipment.parameters.compute_extended_volume()
+
+    def unload(self) -> None:
+        self._loadable_point_to_max_points = defaultdict(set)
+        self._shipment_id_to_min_point = {}
+        self._min_point_to_shipment_id = {}
+        self._shipment_id_to_shipment = {}
+        self._shipment_id_order = []
+        self._loaded_volume = 0
+        self._insert_first_loadable_point()
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         if not self._volume_fits(point, shipment_params):
@@ -88,9 +107,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         if not self._weight_fits(shipment_params.weight):
             return False
         return True
-
-    def calculate_point_loading_order(self) -> List[Point]:
-        return sorted(self._min_point_to_id.keys(), key=lambda p: (p.x, p.y, p.z))
 
     def _insert_first_loadable_point(self) -> None:
         loadable_point = Point(0, 0, 0)
@@ -111,7 +127,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return False
 
     def _weight_fits(self, weight: int) -> bool:
-        total_weight = sum([shipment.weight for shipment in self._id_to_shipment.values()])
+        total_weight = sum([shipment.weight for shipment in self._shipment_id_to_shipment.values()])
         total_weight += weight
         return total_weight <= self.lifting_capacity
 
@@ -289,6 +305,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def _compute_loaded_volume(self) -> float:
         loaded_volume = 0
-        for shipment in self._id_to_shipment.values():
+        for shipment in self._shipment_id_to_shipment.values():
             loaded_volume += shipment.parameters.compute_extended_volume()
         return loaded_volume

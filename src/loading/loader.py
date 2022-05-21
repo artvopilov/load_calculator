@@ -5,6 +5,7 @@ from src.items.container import Container
 from src.items.item_fabric import ItemFabric
 from src.items.point import Point
 from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
+from src.iterators.points.vertical_points_iterator import VerticalPointsIterator
 from src.logger.logger import Logger
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -47,6 +48,20 @@ class Loader:
             self._container_params_to_count[max_loaded_container.parameters] -= 1
             for shipment_params, count in containers_to_shipment_counts[max_loaded_container].items():
                 self._shipment_params_to_count[shipment_params] -= count
+
+    def calculate_loading_order(self) -> None:
+        for container in self._containers:
+            min_point_to_shipment_id = container.min_point_to_shipment_id
+            shipment_id_to_shipment = container.shipment_id_to_shipment
+            container.unload()
+            while len(min_point_to_shipment_id) > 0:
+                for point in VerticalPointsIterator(min_point_to_shipment_id.keys()):
+                    shipment = shipment_id_to_shipment[min_point_to_shipment_id[point]]
+                    can_load = container.can_load_into_point(point, shipment.parameters)
+                    if can_load:
+                        container.load(point, shipment)
+                        min_point_to_shipment_id.pop(point)
+                        break
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(

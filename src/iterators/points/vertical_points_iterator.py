@@ -6,4 +6,4 @@ from src.iterators.points.points_iterator import PointsIterator
 
 class VerticalPointsIterator(PointsIterator):
     def _get_point_order_key(self, point: Point) -> Tuple:
-        return point.x, point.y, point.z
+        return point.x, point.z, point.y

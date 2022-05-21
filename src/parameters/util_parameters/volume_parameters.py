@@ -53,10 +53,16 @@ class VolumeParameters(Parameters):
         area_extension = extended_area / self.compute_area()
         return int(self.length * math.sqrt(area_extension))
 
+    def get_length_diff(self) -> float:
+        return self.get_extended_length() - self.length
+
     def get_extended_width(self) -> int:
         extended_area = self.compute_extended_area()
         area_extension = extended_area / self.compute_area()
         return int(self.width * math.sqrt(area_extension))
+
+    def get_width_diff(self) -> float:
+        return self.get_extended_width() - self.width
 
     def get_extended_height(self) -> int:
         return int(self.height * (1 - self.extension))

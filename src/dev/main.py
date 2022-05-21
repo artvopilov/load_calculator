@@ -45,6 +45,7 @@ def test_from_constants() -> None:
 
 def test_loading(loader: Loader) -> None:
     loader.load()
+    loader.calculate_loading_order()
     containers = loader.get_loaded_containers()
     left_shipment_counts = loader.get_left_shipments_counts()
 

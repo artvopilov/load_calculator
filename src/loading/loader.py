@@ -6,7 +6,6 @@ from src.items.item_fabric import ItemFabric
 from src.items.point import Point
 from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
 from src.loading.container_selection_type import ContainerSelectionType
-from src.loading.container_selector import ContainerSelector
 from src.logger.logger import Logger
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -20,7 +19,6 @@ class Loader:
     _shipments_counts: Dict[ShipmentParameters, int]
 
     _load_item_fabric: ItemFabric
-    _container_selector: ContainerSelector
 
     _containers: List[Container]
 
@@ -33,7 +31,6 @@ class Loader:
             container_selection_type: ContainerSelectionType,
             shipments_counts: Dict[ShipmentParameters, int],
             load_item_fabric: ItemFabric,
-            container_selector: ContainerSelector,
             logger: Logger
     ) -> None:
         self._container_counts = container_counts
@@ -41,7 +38,6 @@ class Loader:
         self._container_selection_type = container_selection_type
         self._shipments_counts = shipments_counts
         self._load_item_fabric = load_item_fabric
-        self._container_selector = container_selector
         self._containers = []
         self._logger = logger
 

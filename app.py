@@ -4,7 +4,6 @@ from src.api.constants import AUTO_CONTAINERS
 from src.api.request_parser import RequestParser
 from src.api.response_builder import ResponseBuilder
 from src.items.item_fabric import ItemFabric
-from src.loading.container_selection_type import ContainerSelectionType
 from src.loading.loader import Loader
 from src.logger.dummy_logger import DummyLogger
 
@@ -27,12 +26,14 @@ def calculate():
     shipment_counts = request_parser.parse_shipment_counts(request)
     container_counts = request_parser.parse_container_counts(request)
 
+    if not container_counts:
+        container_counts = {c: -1 for c in AUTO_CONTAINERS}
+
     item_fabric = ItemFabric()
-    container_selection_type = ContainerSelectionType.FIXED if container_counts else ContainerSelectionType.AUTO
     logger = DummyLogger()
 
-    loader = Loader(container_counts, AUTO_CONTAINERS, container_selection_type, shipment_counts, item_fabric, logger)
+    loader = Loader(container_counts, shipment_counts, item_fabric, logger)
     loader.load()
 
     response_builder = ResponseBuilder()
-    return response_builder.build(loader.containers, loader.shipments_counts)
+    return response_builder.build(loader.get_loaded_containers(), loader.get_left_shipments_counts())

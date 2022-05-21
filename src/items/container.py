@@ -13,26 +13,21 @@ from src.items.point import Point
 
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
-
     _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
-
     _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
+    _loaded_volume: float
 
     def __init__(self, parameters: ContainerParameters, id_: int):
         Item.__init__(self, id_)
         VolumeItem.__init__(self, parameters)
         NameItem.__init__(self, parameters)
-
         self._parameters = parameters
-
-        loadable_point = Point(0, 0, 0)
-        loadable_max_point = Point(parameters.length - 1, parameters.width - 1, parameters.height - 1)
         self._loadable_point_to_max_points = defaultdict(set)
-        self._loadable_point_to_max_points[loadable_point].add(loadable_max_point)
-
         self._id_to_shipment = {}
         self._min_point_to_id = {}
+        self._loaded_volume = 0
+        self._insert_first_loadable_point()
 
     @property
     def lifting_capacity(self) -> int:
@@ -74,8 +69,8 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         response['loaded_volume_share'] = loaded_volume / volume
         return response
 
-    def compute_loaded_volume(self) -> float:
-        return sum(list(map(lambda s: s.parameters.compute_extended_volume(), self._id_to_shipment.values())))
+    def get_loaded_volume(self) -> float:
+        return self._loaded_volume
 
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
@@ -85,6 +80,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         # self._min_point_to_id[Point(x, y, point.z)] = shipment.id
         self._min_point_to_id[point] = shipment.id
         self._id_to_shipment[shipment.id] = shipment
+        self._loaded_volume += shipment.parameters.compute_extended_volume()
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         if not self._volume_fits(point, shipment_params):
@@ -95,6 +91,11 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def calculate_point_loading_order(self) -> List[Point]:
         return sorted(self._min_point_to_id.keys(), key=lambda p: (p.x, p.y, p.z))
+
+    def _insert_first_loadable_point(self) -> None:
+        loadable_point = Point(0, 0, 0)
+        loadable_max_point = Point(self._parameters.length - 1, self._parameters.width - 1, self._parameters.height - 1)
+        self._loadable_point_to_max_points[loadable_point].add(loadable_max_point)
 
     def _volume_fits(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         max_points = self._loadable_point_to_max_points[point]

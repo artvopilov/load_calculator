@@ -55,13 +55,16 @@ class Loader:
             shipment_id_to_shipment = container.shipment_id_to_shipment
             container.unload()
             while len(min_point_to_shipment_id) > 0:
+                last_loaded_point = None
                 for point in VerticalPointsIterator(min_point_to_shipment_id.keys()):
                     shipment = shipment_id_to_shipment[min_point_to_shipment_id[point]]
                     can_load = container.can_load_into_point(point, shipment.parameters)
                     if can_load:
+                        if last_loaded_point and (last_loaded_point.x != point.x or last_loaded_point.z != point.z):
+                            break
                         container.load(point, shipment)
                         min_point_to_shipment_id.pop(point)
-                        break
+                        last_loaded_point = point
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(

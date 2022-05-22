@@ -14,10 +14,10 @@ from src.items.point import Point
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
     _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
-    _shipment_id_to_min_point: Dict[int, Point]
-    _min_point_to_shipment_id: Dict[Point, int]
-    _shipment_id_to_shipment: Dict[int, Shipment]
-    _shipment_id_order: List[int]
+    _id_to_min_point_shifted: Dict[int, Point]
+    _min_point_to_id: Dict[Point, int]
+    _id_to_shipment: Dict[int, Shipment]
+    _loading_order: List[int]
     _loaded_volume: float
 
     def __init__(self, parameters: ContainerParameters, id_: int):
@@ -26,10 +26,10 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         NameItem.__init__(self, parameters)
         self._parameters = parameters
         self._loadable_point_to_max_points = defaultdict(set)
-        self._shipment_id_to_min_point = {}
-        self._min_point_to_shipment_id = {}
-        self._shipment_id_to_shipment = {}
-        self._shipment_id_order = []
+        self._id_to_min_point_shifted = {}
+        self._min_point_to_id = {}
+        self._id_to_shipment = {}
+        self._loading_order = []
         self._loaded_volume = 0
         self._insert_first_loadable_point()
 
@@ -46,20 +46,20 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._loadable_point_to_max_points
 
     @property
-    def shipment_id_to_min_point(self) -> Dict[int, Point]:
-        return self._shipment_id_to_min_point
+    def id_to_min_point_shifted(self) -> Dict[int, Point]:
+        return self._id_to_min_point_shifted
 
     @property
-    def min_point_to_shipment_id(self) -> Dict[Point, int]:
-        return self._min_point_to_shipment_id
+    def min_point_to_id(self) -> Dict[Point, int]:
+        return self._min_point_to_id
 
     @property
-    def shipment_id_to_shipment(self) -> Dict[int, Shipment]:
-        return self._shipment_id_to_shipment
+    def id_to_shipment(self) -> Dict[int, Shipment]:
+        return self._id_to_shipment
 
     @property
-    def shipment_id_order(self) -> List[int]:
-        return self._shipment_id_order
+    def loading_order(self) -> List[int]:
+        return self._loading_order
 
     def _key(self) -> Tuple:
         return self.id, self.length, self.width, self.height, self.lifting_capacity
@@ -74,29 +74,24 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
                f'lifting_capacity={self.length}' \
                f')'
 
-    def build_response(self) -> Dict:
-        response = self.parameters.build_response()
-        volume = self.parameters.compute_volume()
-        response['loaded_volume_share'] = self._loaded_volume / volume
-        return response
-
-    def get_loaded_volume(self) -> float:
-        return self._loaded_volume
-
     def load(self, point: Point, shipment: Shipment) -> None:
         self._update_loadable_points(point, shipment)
-        self._shipment_id_to_min_point[shipment.id] = point
-        self._min_point_to_shipment_id[point] = shipment.id
-        self._shipment_id_to_shipment[shipment.id] = shipment
-        self._shipment_id_order.append(shipment.id)
+
+        x = int(point.x + shipment.parameters.get_length_diff() / 2)
+        y = int(point.y + shipment.parameters.get_width_diff() / 2)
+        self._id_to_min_point_shifted[shipment.id] = Point(x, y, point.z)
+
+        self._min_point_to_id[point] = shipment.id
+        self._id_to_shipment[shipment.id] = shipment
+        self._loading_order.append(shipment.id)
         self._loaded_volume += shipment.parameters.compute_extended_volume()
 
     def unload(self) -> None:
         self._loadable_point_to_max_points = defaultdict(set)
-        self._shipment_id_to_min_point = {}
-        self._min_point_to_shipment_id = {}
-        self._shipment_id_to_shipment = {}
-        self._shipment_id_order = []
+        self._id_to_min_point_shifted = {}
+        self._min_point_to_id = {}
+        self._id_to_shipment = {}
+        self._loading_order = []
         self._loaded_volume = 0
         self._insert_first_loadable_point()
 
@@ -106,6 +101,15 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         if not self._weight_fits(shipment_params.weight):
             return False
         return True
+
+    def get_loaded_volume(self) -> float:
+        return self._loaded_volume
+
+    def build_response(self) -> Dict:
+        response = self.parameters.build_response()
+        volume = self.parameters.compute_volume()
+        response['loaded_volume_share'] = self._loaded_volume / volume
+        return response
 
     def _insert_first_loadable_point(self) -> None:
         loadable_point = Point(0, 0, 0)
@@ -126,15 +130,13 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return False
 
     def _weight_fits(self, weight: int) -> bool:
-        total_weight = sum([shipment.weight for shipment in self._shipment_id_to_shipment.values()])
+        total_weight = sum([shipment.weight for shipment in self._id_to_shipment.values()])
         total_weight += weight
         return total_weight <= self.lifting_capacity
 
     def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
         loading_max_p = self._compute_max_point(loading_p, shipment.parameters)
-
         bottom_points, top_points = self._select_points_for_update(loading_p, loading_max_p)
-
         self._update_bottom_points(loading_p, loading_max_p, bottom_points)
         if shipment.can_stack:
             self._update_top_points(loading_p, loading_max_p, top_points)
@@ -271,6 +273,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         cur_points_for_delete = defaultdict(set)
         for p in points:
             for max_p in self._loadable_point_to_max_points[p]:
+                # try to use points for extension
                 for extension_p in extension_points.keys():
                     for extension_max_p in extension_points[extension_p]:
                         if max_p.y >= extension_p.y and p.y <= extension_max_p.y and p.x == extension_max_p.x + 1:

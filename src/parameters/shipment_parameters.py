@@ -90,9 +90,6 @@ class ShipmentParameters(VolumeParameters, NameParameters):
             'type': self.form_type,
             'color': self.color,
             'stack': self.can_stack,
-            'height_as_height': self.height_as_height,
-            'length_as_height': self.length_as_height,
-            'width_as_height': self.width_as_height,
             'extension': self.extension,
         }
 

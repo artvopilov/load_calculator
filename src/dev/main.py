@@ -44,14 +44,12 @@ def test_from_constants() -> None:
 
 
 def test_loading(loader: Loader) -> None:
-    loader.load()
-    loader.calculate_loading_order()
-    containers = loader.get_loaded_containers()
+    loaded_containers = loader.load()
     left_shipment_counts = loader.get_left_shipments_counts()
 
     now = datetime.now()
     image_3d_creator = Image3dCreator(now)
-    for container in containers:
+    for container in loaded_containers:
         print(container)
         image_3d_creator.create_iterative(container)
     for shipment, count in left_shipment_counts.items():

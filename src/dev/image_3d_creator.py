@@ -51,18 +51,18 @@ class Image3dCreator:
         self._current_time = current_time
 
     def create(self, container: Container) -> None:
-        self._create(container, len(container.shipment_id_to_shipment))
+        self._create(container, len(container.id_to_shipment))
 
     def create_iterative(self, container: Container) -> None:
         shipments_iterations_num = []
         last_shipment_params = None
 
-        for n, shipment_id in enumerate(container.shipment_id_order):
-            shipment = container.shipment_id_to_shipment[shipment_id]
+        for n, shipment_id in enumerate(container.loading_order):
+            shipment = container.id_to_shipment[shipment_id]
             if shipment.parameters != last_shipment_params:
                 shipments_iterations_num.append(n)
                 last_shipment_params = shipment.parameters
-        shipments_iterations_num.append(len(container.shipment_id_to_shipment))
+        shipments_iterations_num.append(len(container.id_to_shipment))
 
         for iter_num in tqdm(shipments_iterations_num):
             if iter_num == 0:
@@ -95,13 +95,10 @@ class Image3dCreator:
         cubes = []
         colors = []
 
-        for shipment_id in container.shipment_id_order[:shipments_num]:
-            point = container.shipment_id_to_min_point[shipment_id]
-            shipment = container.shipment_id_to_shipment[shipment_id]
-            x = int(point.x + shipment.parameters.get_length_diff() / 2)
-            y = int(point.y + shipment.parameters.get_width_diff() / 2)
-            point_shifted = Point(x, y, point.z)
-            self._add_cube_data(point_shifted, shipment, cubes, colors)
+        for shipment_id in container.loading_order[:shipments_num]:
+            point = container.id_to_min_point_shifted[shipment_id]
+            shipment = container.id_to_shipment[shipment_id]
+            self._add_cube_data(point, shipment, cubes, colors)
 
         return Poly3DCollection(
             np.concatenate(cubes),
@@ -124,9 +121,9 @@ class Image3dCreator:
         return polygons
 
     def _plot_cubes(self, ax: Axes3D, container: Container) -> None:
-        for id_, point in container.id_to_min_point.items():
-            is_shipment = id_ in container.shipment_id_to_shipment
-            item = container.shipment_id_to_shipment[id_] if is_shipment else container.id_to_pallet[id_]
+        for id_, point in container.id_to_min_point_shifted.items():
+            is_shipment = id_ in container.id_to_shipment
+            item = container.id_to_shipment[id_] if is_shipment else container.id_to_pallet[id_]
 
             cube_coordinates = self._compute_cube_coordinates(point, item.parameters)
 

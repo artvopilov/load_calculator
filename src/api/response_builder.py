@@ -17,8 +17,8 @@ class ResponseBuilder:
             id_to_shipment_params = {}
             points = []
             points_batch = []
-            for shipment_id in container.shipment_id_order:
-                shipment = container.shipment_id_to_shipment[shipment_id]
+            for shipment_id in container.loading_order:
+                shipment = container.id_to_shipment[shipment_id]
                 if shipment.parameters != last_shipment_params:
                     if points_batch:
                         self.process_batch(points, points_batch, id_to_shipment_params,
@@ -27,11 +27,8 @@ class ResponseBuilder:
                     last_shipment_params_id += 1
                     points_batch = []
 
-                point = container.shipment_id_to_min_point[shipment_id]
-                x = int(point.x + shipment.parameters.get_length_diff() / 2)
-                y = int(point.y + shipment.parameters.get_width_diff() / 2)
-                point_shifted = Point(x, y, point.z)
-                points_batch.append(point_shifted.build_response(last_shipment_params_id))
+                point = container.id_to_min_point_shifted[shipment_id]
+                points_batch.append(point.build_response(last_shipment_params_id))
 
             self.process_batch(points, points_batch, id_to_shipment_params, last_shipment_params, last_shipment_params_id)
 

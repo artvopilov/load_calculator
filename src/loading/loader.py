@@ -14,7 +14,6 @@ from src.parameters.shipment_parameters import ShipmentParameters
 class Loader:
     _container_params_to_count: Dict[ContainerParameters, int]
     _shipment_params_to_count: Dict[ShipmentParameters, int]
-    _containers: List[Container]
     _item_fabric: ItemFabric
     _logger: Logger
 
@@ -27,43 +26,46 @@ class Loader:
     ) -> None:
         self._container_params_to_count = container_counts
         self._shipment_params_to_count = shipments_counts
-        self._containers = []
         self._item_fabric = load_item_fabric
         self._logger = logger
-
-    def get_loaded_containers(self) -> List[Container]:
-        return self._containers
 
     def get_left_shipments_counts(self) -> Dict[ShipmentParameters, int]:
         return self._shipment_params_to_count
 
-    def load(self) -> None:
+    def load(self) -> List[Container]:
+        containers = self._compute_loading_locations()
+        self._compute_loading_order(containers)
+        return containers
+
+    def _compute_loading_locations(self) -> List[Container]:
+        containers = []
         shipment_params_order = self._calculate_shipment_params_order()
         while self._count_shipments() > 0:
             containers_to_shipment_counts = self._load_shipments_into_available_containers(shipment_params_order)
             max_loaded_container = self._select_max_loaded_container(list(containers_to_shipment_counts.keys()))
             if not max_loaded_container:
                 break
-            self._containers.append(max_loaded_container)
+            containers.append(max_loaded_container)
             self._container_params_to_count[max_loaded_container.parameters] -= 1
             for shipment_params, count in containers_to_shipment_counts[max_loaded_container].items():
                 self._shipment_params_to_count[shipment_params] -= count
+        return containers
 
-    def calculate_loading_order(self) -> None:
-        for container in self._containers:
-            min_point_to_shipment_id = container.min_point_to_shipment_id
-            shipment_id_to_shipment = container.shipment_id_to_shipment
+    def _compute_loading_order(self, containers: List[Container]) -> None:
+        for container in containers:
+            min_point_to_id = container.min_point_to_id
+            id_to_shipment = container.id_to_shipment
             container.unload()
-            while len(min_point_to_shipment_id) > 0:
+            while len(min_point_to_id) > 0:
                 last_loaded_point = None
-                for point in VerticalPointsIterator(min_point_to_shipment_id.keys()):
-                    shipment = shipment_id_to_shipment[min_point_to_shipment_id[point]]
+                for point in VerticalPointsIterator(min_point_to_id.keys()):
+                    shipment = id_to_shipment[min_point_to_id[point]]
                     can_load = container.can_load_into_point(point, shipment.parameters)
                     if can_load:
-                        if last_loaded_point and (last_loaded_point.x != point.x or last_loaded_point.z != point.z):
+                        if last_loaded_point and last_loaded_point.x != point.x:  # or last_loaded_point.z != point.z):
                             break
                         container.load(point, shipment)
-                        min_point_to_shipment_id.pop(point)
+                        min_point_to_id.pop(point)
                         last_loaded_point = point
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:

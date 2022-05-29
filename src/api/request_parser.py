@@ -2,6 +2,8 @@ from typing import Dict
 
 from flask import Request
 
+from src.api.request_data import RequestData
+from src.loading.loading_type import LoadingType
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -11,14 +13,20 @@ class RequestParser:
     def __init__(self) -> None:
         pass
 
-    def parse_shipment_counts(self, request: Request) -> Dict:
+    def parse(self, request: Request) -> RequestData:
+        shipment_counts = self._parse_shipment_counts(request)
+        container_counts = self._parse_container_counts(request)
+        loading_type = self._parse_loading_type(request)
+        return RequestData(shipment_counts, container_counts, loading_type)
+
+    def _parse_shipment_counts(self, request: Request) -> Dict:
         shipment_counts = {}
         for cargo in request.json['cargo']:
             shipment_params = self._create_shipment_params(cargo)
             shipment_counts[shipment_params] = cargo['number']
         return shipment_counts
 
-    def parse_container_counts(self, request: Request) -> Dict:
+    def _parse_container_counts(self, request: Request) -> Dict:
         if 'containers' not in request.json:
             return {}
         container_counts = {}
@@ -26,6 +34,11 @@ class RequestParser:
             container_params = self._create_container_params(container)
             container_counts[container_params] = container['number']
         return container_counts
+
+    def _parse_loading_type(self, request: Request) -> LoadingType:
+        if 'loading_type' in request.json:
+            return LoadingType.from_name(request.json['loading_type'])
+        return LoadingType.STABLE
 
     def _create_shipment_params(self, cargo_request: Dict) -> ShipmentParameters:
         length = cargo_request['length']

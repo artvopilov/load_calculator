@@ -23,16 +23,17 @@ def hello_world():
 @app.route('/calculate', methods=['POST'])
 def calculate():
     request_parser = RequestParser()
-    shipment_counts = request_parser.parse_shipment_counts(request)
-    container_counts = request_parser.parse_container_counts(request)
+    request_data = request_parser.parse(request)
 
-    if not container_counts:
-        container_counts = {c: -1 for c in AUTO_CONTAINERS}
+    container_params_to_count = request_data.container_params_to_count
+    if not container_params_to_count:
+        container_params_to_count = {c: -1 for c in AUTO_CONTAINERS}
 
     item_fabric = ItemFabric()
     logger = DummyLogger()
 
-    loader = Loader(container_counts, shipment_counts, item_fabric, logger)
+    loader = Loader(container_params_to_count, request_data.shipment_params_to_count, request_data.loading_type,
+                    item_fabric, logger)
     loaded_containers = loader.load()
 
     response_builder = ResponseBuilder()

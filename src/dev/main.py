@@ -4,10 +4,11 @@ from datetime import datetime
 import matplotlib.colors as mcolors
 import pandas as pd
 
-from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS
+from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS, SHIPMENT_COUNTS_2, CONTAINER_COUNTS_2
 from src.dev.image_3d_creator import Image3dCreator
 from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
+from src.loading.loading_type import LoadingType
 from src.logger.console_logger import ConsoleLogger
 from src.parameters.shipment_parameters import ShipmentParameters
 
@@ -32,14 +33,14 @@ def test_from_file() -> None:
 
     item_fabric = ItemFabric()
     logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS, shipment_counts, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS, shipment_counts, LoadingType.STABLE, item_fabric, logger)
     test_loading(loader)
 
 
 def test_from_constants() -> None:
     item_fabric = ItemFabric()
     logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS, SHIPMENT_COUNTS, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS_2, LoadingType.STABLE, item_fabric, logger)
     test_loading(loader)
 
 

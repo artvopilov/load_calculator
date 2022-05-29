@@ -48,38 +48,29 @@ class VolumeParameters(Parameters):
     def extension(self) -> float:
         return self._extension
 
-    def get_extended_length(self) -> int:
-        extended_area = self.compute_extended_area()
-        area_extension = extended_area / self.compute_area()
-        return int(self.length * math.sqrt(area_extension))
+    def get_loading_length(self) -> int:
+        return int(self.length * math.sqrt((1 + self._extension)))
 
     def get_length_diff(self) -> float:
-        return self.get_extended_length() - self.length
+        return self.get_loading_length() - self.length
 
-    def get_extended_width(self) -> int:
-        extended_area = self.compute_extended_area()
-        area_extension = extended_area / self.compute_area()
-        return int(self.width * math.sqrt(area_extension))
+    def get_loading_width(self) -> int:
+        return int(self.width * math.sqrt((1 + self._extension)))
 
     def get_width_diff(self) -> float:
-        return self.get_extended_width() - self.width
-
-    def get_extended_height(self) -> int:
-        return int(self.height * (1 - self.extension))
-
-    def compute_volume(self) -> int:
-        return self.compute_area() * self.height
+        return self.get_loading_width() - self.width
 
     def compute_area(self) -> int:
         return self.length * self.width
 
-    def compute_extended_volume(self) -> float:
-        return self.compute_extended_area() * self.height
+    def compute_loading_area(self) -> float:
+        return self.compute_area() * (1 + self._extension)
 
-    def compute_extended_area(self) -> float:
-        volume = self.compute_volume()
-        extended_height = self.get_extended_height()
-        return volume / extended_height
+    def compute_volume(self) -> int:
+        return self.compute_area() * self.height
+
+    def compute_loading_volume(self) -> float:
+        return self.compute_loading_area() * self.height
 
     def _key(self) -> Tuple:
         return self.length, self.width, self.height, self.extension

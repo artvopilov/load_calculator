@@ -5,7 +5,9 @@ from src.items.container import Container
 from src.items.item_fabric import ItemFabric
 from src.items.point import Point
 from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
+from src.iterators.points.points_iterator import PointsIterator
 from src.iterators.points.vertical_points_iterator import VerticalPointsIterator
+from src.loading.loading_type import LoadingType
 from src.logger.logger import Logger
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -14,18 +16,21 @@ from src.parameters.shipment_parameters import ShipmentParameters
 class Loader:
     _container_params_to_count: Dict[ContainerParameters, int]
     _shipment_params_to_count: Dict[ShipmentParameters, int]
+    _loading_type: LoadingType
     _item_fabric: ItemFabric
     _logger: Logger
 
     def __init__(
             self,
-            container_counts: Dict[ContainerParameters, int],
-            shipments_counts: Dict[ShipmentParameters, int],
+            container_params_to_count: Dict[ContainerParameters, int],
+            shipment_params_to_count: Dict[ShipmentParameters, int],
+            loading_type: LoadingType,
             load_item_fabric: ItemFabric,
             logger: Logger
     ) -> None:
-        self._container_params_to_count = container_counts
-        self._shipment_params_to_count = shipments_counts
+        self._container_params_to_count = container_params_to_count
+        self._shipment_params_to_count = shipment_params_to_count
+        self._loading_type = loading_type
         self._item_fabric = load_item_fabric
         self._logger = logger
 
@@ -135,9 +140,13 @@ class Loader:
         self._logger.info("Iterating container")
         for shipment_params in shipment_params_variations:
             # self._logger.info(f'Loading variation: {shipment_params}')
-            for point in HorizontalPointsIterator(container.loadable_point_to_max_points.keys()):
+            for point in self._get_points_iterator(container):
                 # self._logger.info(f"Checking point {point}")
                 can_load = container.can_load_into_point(point, shipment_params)
                 if can_load:
                     return point, shipment_params
         return None
+
+    def _get_points_iterator(self, container: Container) -> PointsIterator:
+        points = container.loadable_point_to_max_points.keys()
+        return HorizontalPointsIterator(points) if self._loading_type.STABLE else VerticalPointsIterator(points)

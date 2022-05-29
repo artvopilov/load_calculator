@@ -9,6 +9,7 @@ from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
 from src.items.point import Point
+from src.statistics.container_statistics import ContainerStatistics
 
 
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
@@ -18,7 +19,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
     _loading_order: List[int]
-    _loaded_volume: float
+    _container_statistics: ContainerStatistics
 
     def __init__(self, parameters: ContainerParameters, id_: int):
         Item.__init__(self, id_)
@@ -30,7 +31,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._min_point_to_id = {}
         self._id_to_shipment = {}
         self._loading_order = []
-        self._loaded_volume = 0
+        self._container_statistics = ContainerStatistics()
         self._insert_first_loadable_point()
 
     @property
@@ -84,7 +85,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._min_point_to_id[point] = shipment.id
         self._id_to_shipment[shipment.id] = shipment
         self._loading_order.append(shipment.id)
-        self._loaded_volume += shipment.parameters.compute_extended_volume()
+        self._container_statistics.update(point, shipment.parameters)
 
     def unload(self) -> None:
         self._loadable_point_to_max_points = defaultdict(set)
@@ -92,7 +93,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._min_point_to_id = {}
         self._id_to_shipment = {}
         self._loading_order = []
-        self._loaded_volume = 0
+        self._container_statistics = ContainerStatistics()
         self._insert_first_loadable_point()
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
@@ -103,12 +104,13 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return True
 
     def get_loaded_volume(self) -> float:
-        return self._loaded_volume
+        return self._container_statistics.loaded_volume
 
     def build_response(self) -> Dict:
         response = self.parameters.build_response()
         volume = self.parameters.compute_volume()
-        response['loaded_volume_share'] = self._loaded_volume / volume
+        response['loaded_volume_share'] = self._container_statistics.loaded_volume / volume
+        response['ldm'] = self._container_statistics.ldm
         return response
 
     def _insert_first_loadable_point(self) -> None:
@@ -120,9 +122,9 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         max_points = self._loadable_point_to_max_points[point]
         for max_point in max_points:
             v = VolumeParameters.from_points(point, max_point)
-            if v.length < shipment_params.get_extended_length():
+            if v.length < shipment_params.get_loading_length():
                 continue
-            if v.width < shipment_params.get_extended_width():
+            if v.width < shipment_params.get_loading_width():
                 continue
             if v.height < shipment_params.height:
                 continue
@@ -301,6 +303,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:
         return Point(
-            point.x + volume_parameters.get_extended_length() - 1,
-            point.y + volume_parameters.get_extended_width() - 1,
+            point.x + volume_parameters.get_loading_length() - 1,
+            point.y + volume_parameters.get_loading_width() - 1,
             point.z + volume_parameters.height - 1)

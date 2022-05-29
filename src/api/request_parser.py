@@ -14,19 +14,12 @@ class RequestParser:
         pass
 
     def parse(self, request: Request) -> RequestData:
-        shipment_counts = self._parse_shipment_counts(request)
-        container_counts = self._parse_container_counts(request)
+        container_params_to_count = self._parse_container_params_to_count(request)
+        shipment_params_to_count = self._parse_shipment_params_to_count(request)
         loading_type = self._parse_loading_type(request)
-        return RequestData(shipment_counts, container_counts, loading_type)
+        return RequestData(container_params_to_count, shipment_params_to_count, loading_type)
 
-    def _parse_shipment_counts(self, request: Request) -> Dict:
-        shipment_counts = {}
-        for cargo in request.json['cargo']:
-            shipment_params = self._create_shipment_params(cargo)
-            shipment_counts[shipment_params] = cargo['number']
-        return shipment_counts
-
-    def _parse_container_counts(self, request: Request) -> Dict:
+    def _parse_container_params_to_count(self, request: Request) -> Dict[ContainerParameters, int]:
         if 'containers' not in request.json:
             return {}
         container_counts = {}
@@ -34,6 +27,13 @@ class RequestParser:
             container_params = self._create_container_params(container)
             container_counts[container_params] = container['number']
         return container_counts
+
+    def _parse_shipment_params_to_count(self, request: Request) -> Dict[ShipmentParameters, int]:
+        shipment_counts = {}
+        for cargo in request.json['cargo']:
+            shipment_params = self._create_shipment_params(cargo)
+            shipment_counts[shipment_params] = cargo['number']
+        return shipment_counts
 
     def _parse_loading_type(self, request: Request) -> LoadingType:
         if 'loading_type' in request.json:

@@ -4,6 +4,7 @@ from datetime import datetime
 import matplotlib.colors as mcolors
 import pandas as pd
 
+from src.api.response_builder import ResponseBuilder
 from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS, SHIPMENT_COUNTS_2, CONTAINER_COUNTS_2
 from src.dev.image_3d_creator import Image3dCreator
 from src.items.item_fabric import ItemFabric
@@ -47,6 +48,9 @@ def test_from_constants() -> None:
 def test_loading(loader: Loader) -> None:
     loaded_containers = loader.load()
     left_shipment_counts = loader.get_left_shipments_counts()
+
+    response_builder = ResponseBuilder()
+    print(response_builder.build(loaded_containers, loader.get_left_shipments_counts()))
 
     now = datetime.now()
     image_3d_creator = Image3dCreator(now)

@@ -35,5 +35,5 @@ class ContainerStatistics:
     def update(self, point: Point, shipment_params: ShipmentParameters) -> None:
         self._loaded_volume += shipment_params.compute_loading_volume()
         self._loaded_length = max(self._loaded_length, point.x + shipment_params.get_loading_length())
-        self._loaded_length = max(self._loaded_width, point.y + shipment_params.get_loading_width())
+        self._loaded_width = max(self._loaded_width, point.y + shipment_params.get_loading_width())
         self._ldm = self._loaded_length * self._loaded_width / self._LDM_WIDTH_COEFFICIENT

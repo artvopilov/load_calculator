@@ -4,7 +4,6 @@ from typing import Dict, List
 from flask import jsonify, Response
 
 from src.items.container import Container
-from src.items.point import Point
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
@@ -42,7 +41,7 @@ class ResponseBuilder:
             response['left_cargos'].append(shipment_params.build_response())
             response['left_cargos'][-1]['number'] = left_count
 
-        return jsonify(response)
+        return response
 
     @staticmethod
     def process_batch(

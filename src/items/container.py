@@ -35,10 +35,6 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._insert_first_loadable_point()
 
     @property
-    def lifting_capacity(self) -> int:
-        return self._parameters.lifting_capacity
-
-    @property
     def parameters(self) -> ContainerParameters:
         return self._parameters
 
@@ -63,7 +59,8 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._loading_order
 
     def _key(self) -> Tuple:
-        return self.id, self.length, self.width, self.height, self.lifting_capacity
+        return self.id, self._parameters.length, self._parameters.width, \
+               self._parameters.height, self._parameters.lifting_capacity
 
     def __str__(self) -> str:
         return f'Container: (' \
@@ -134,7 +131,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     def _weight_fits(self, weight: int) -> bool:
         total_weight = sum([shipment.weight for shipment in self._id_to_shipment.values()])
         total_weight += weight
-        return total_weight <= self.lifting_capacity
+        return total_weight <= self._parameters.lifting_capacity
 
     def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
         loading_max_p = self._compute_max_point(loading_p, shipment.parameters)

@@ -149,4 +149,7 @@ class Loader:
 
     def _get_points_iterator(self, container: Container) -> PointsIterator:
         points = container.loadable_point_to_max_points.keys()
-        return HorizontalPointsIterator(points) if self._loading_type.STABLE else VerticalPointsIterator(points)
+        if self._loading_type == LoadingType.STABLE:
+            return HorizontalPointsIterator(points)
+        else:
+            return VerticalPointsIterator(points)

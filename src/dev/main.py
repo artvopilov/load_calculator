@@ -41,7 +41,7 @@ def test_from_file() -> None:
 def test_from_constants() -> None:
     item_fabric = ItemFabric()
     logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS_2, LoadingType.STABLE, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS, LoadingType.COMPACT, item_fabric, logger)
     test_loading(loader)
 
 
@@ -56,7 +56,7 @@ def test_loading(loader: Loader) -> None:
     image_3d_creator = Image3dCreator(now)
     for container in loaded_containers:
         print(container)
-        image_3d_creator.create_iterative(container)
+        image_3d_creator.create(container)
     for shipment, count in left_shipment_counts.items():
         if count:
             print(f'Not loaded {shipment}: {count}')

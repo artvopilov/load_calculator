@@ -42,7 +42,7 @@ def test_from_file() -> None:
 def test_from_constants() -> None:
     item_fabric = ItemFabric()
     logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS, LoadingType.STABLE, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS, LoadingType.COMPACT, item_fabric, logger)
     test_loading(loader)
 
 

@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Optional, List, Tuple, Iterable
 
-from src.items.point import Point
+from src.loading.point import Point
 from src.iterators.space_iterator import SpaceIterator
 
 

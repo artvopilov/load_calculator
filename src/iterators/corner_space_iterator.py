@@ -3,7 +3,7 @@ from typing import Optional
 import numpy as np
 
 from src.iterators.space_iterator import SpaceIterator
-from src.items.point import Point
+from src.loading.point import Point
 
 
 class CornerSpaceIterator(SpaceIterator):

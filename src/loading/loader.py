@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Optional
 
 from src.items.container import Container
 from src.items.item_fabric import ItemFabric
-from src.items.point import Point
+from src.loading.point import Point
 from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
 from src.iterators.points.points_iterator import PointsIterator
 from src.iterators.points.vertical_points_iterator import VerticalPointsIterator
@@ -56,12 +56,13 @@ class Loader:
                 self._shipment_params_to_count[shipment_params] -= count
         return containers
 
-    def _compute_loading_order(self, containers: List[Container]) -> None:
+    @staticmethod
+    def _compute_loading_order(containers: List[Container]) -> None:
         for container in containers:
             min_point_to_id = container.min_point_to_id
             id_to_shipment = container.id_to_shipment
             container.unload()
-            while len(min_point_to_id) > 0:
+            while len(min_point_to_id) > 1:
                 last_loaded_point = None
                 for point in VerticalPointsIterator(min_point_to_id.keys()):
                     shipment = id_to_shipment[min_point_to_id[point]]
@@ -72,6 +73,12 @@ class Loader:
                         container.load(point, shipment)
                         min_point_to_id.pop(point)
                         last_loaded_point = point
+
+                print(len(min_point_to_id))
+                print(list(min_point_to_id.keys())[0])
+
+
+        print('finished order computing')
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
@@ -149,7 +156,7 @@ class Loader:
 
     def _get_points_iterator(self, container: Container) -> PointsIterator:
         points = container.loadable_point_to_max_points.keys()
-        if self._loading_type == LoadingType.STABLE:
+        if self._loading_type == LoadingType.COMPACT:
             return HorizontalPointsIterator(points)
         else:
             return VerticalPointsIterator(points)

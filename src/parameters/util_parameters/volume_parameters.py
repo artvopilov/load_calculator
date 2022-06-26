@@ -2,7 +2,7 @@ import math
 from typing import Tuple
 
 from src.parameters.util_parameters.parameters import Parameters
-from src.items.point import Point
+from src.loading.point import Point
 
 
 class VolumeParameters(Parameters):

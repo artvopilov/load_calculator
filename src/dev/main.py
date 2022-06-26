@@ -5,7 +5,8 @@ import matplotlib.colors as mcolors
 import pandas as pd
 
 from src.api.response_builder import ResponseBuilder
-from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS, SHIPMENT_COUNTS_2, CONTAINER_COUNTS_2
+from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS, SHIPMENT_COUNTS_2, CONTAINER_COUNTS_2, \
+    SHIPMENT_COUNTS_3
 from src.dev.image_3d_creator import Image3dCreator
 from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
@@ -41,7 +42,7 @@ def test_from_file() -> None:
 def test_from_constants() -> None:
     item_fabric = ItemFabric()
     logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS, LoadingType.COMPACT, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS_2, SHIPMENT_COUNTS, LoadingType.STABLE, item_fabric, logger)
     test_loading(loader)
 
 

@@ -1,4 +1,4 @@
-from src.items.point import Point
+from src.loading.point import Point
 from src.parameters.shipment_parameters import ShipmentParameters
 
 

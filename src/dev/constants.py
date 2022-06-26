@@ -32,3 +32,11 @@ SHIPMENT_COUNTS_2 = {
     ShipmentParameters('', '', length=900, width=1300, height=1900, weight=100, color='darkred', can_stack=False,
                        height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 3,
 }
+SHIPMENT_COUNTS_3 = {
+    ShipmentParameters('', '', length=1000, width=500, height=300, weight=100, color='blue', can_stack=True,
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 10,
+    ShipmentParameters('', '', length=600, width=300, height=200, weight=50, color='green', can_stack=True,
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 10,
+    ShipmentParameters('', '', length=500, width=500, height=300, weight=30, color='red', can_stack=False,
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 10,
+}

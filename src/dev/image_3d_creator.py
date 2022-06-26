@@ -10,7 +10,7 @@ from tqdm import tqdm
 from src.items.container import Container
 from src.items.util_items.item import Item
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
-from src.items.point import Point
+from src.loading.point import Point
 
 
 class Image3dCreator:

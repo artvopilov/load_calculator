@@ -196,18 +196,19 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         # insert point above
         new_point = loading_p.with_z(loading_max_p.z + 1)
         new_max_point = loading_max_p.with_z(self.height - 1)
-        # self._loadable_point_to_max_points[new_point].add(new_max_point)
 
+        # use it for extension
         extension_points = defaultdict(set)
         extension_points[new_point].add(new_max_point)
 
-        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, self._point_is_extendable_up)
-
-        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, self._point_is_extendable_up)
-
-        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, self._point_is_extendable_down)
-
-        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, self._point_is_extendable_down)
+        # extend width up
+        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, self._is_extendable_up, self._create_up_points)
+        # extend length up
+        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, self._is_extendable_up, self._create_up_points)
+        # extend width down
+        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, self._is_extendable_down, self._create_down_points)
+        # extend length down
+        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, self._is_extendable_down, self._create_down_points)
 
         for extension_p, extension_max_points in extension_points.items():
             self._loadable_point_to_max_points[extension_p] |= extension_max_points
@@ -218,7 +219,8 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
             extension_points: DefaultDict[Point, Set[Point]],
             c_clip: Coordinate,
             c_extension: Coordinate,
-            point_is_extendable: Callable[[Point, Point, Coordinate], bool]
+            point_is_extendable: Callable[[Point, Point, Point, Point, Coordinate], bool],
+            create_extension_points: Callable[[Point, Point, Point, Point, Coordinate], Tuple[Point, Point]]
     ) -> None:
         cur_extension_points = defaultdict(set)
         cur_points_for_delete = defaultdict(set)
@@ -228,11 +230,8 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
                 for extension_p in extension_points.keys():
                     for extension_max_p in extension_points[extension_p]:
                         if self._point_is_clipped(p, max_p, extension_p, extension_max_p, c_clip) \
-                                and point_is_extendable(max_p, extension_p, c_extension):
-                            new_p = p.with_coordinate(
-                                max(p.get_coordinate(c_clip), extension_p.get_coordinate(c_clip)), c_clip)
-                            new_max_p = extension_max_p.with_coordinate(
-                                min(max_p.get_coordinate(c_clip), extension_max_p.get_coordinate(c_clip)), c_clip)
+                                and point_is_extendable(p, max_p, extension_p, extension_max_p, c_extension):
+                            new_p, new_max_p = create_extension_points(p, max_p, extension_p, extension_max_p, c_clip)
                             cur_extension_points[new_p].add(new_max_p)
                             if p.get_coordinate(c_clip) >= extension_p.get_coordinate(c_clip) \
                                     and max_p.get_coordinate(c_clip) <= extension_max_p.get_coordinate(c_clip):
@@ -266,12 +265,24 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
                and p.get_coordinate(c) <= extension_max_p.get_coordinate(c)
 
     @staticmethod
-    def _point_is_extendable_up(max_p: Point, extension_p: Point, c_extension: Coordinate) -> bool:
-        return max_p.get_coordinate(c_extension) + 1 == extension_p.get_coordinate(c_extension)
+    def _is_extendable_up(p: Point, max_p: Point, extension_p: Point, extension_max_p: Point, c: Coordinate) -> bool:
+        return max_p.get_coordinate(c) + 1 == extension_p.get_coordinate(c)
 
     @staticmethod
-    def _point_is_extendable_down(p: Point, extension_max_p: Point, c_extension: Coordinate) -> bool:
-        return p.get_coordinate(c_extension) == extension_max_p.get_coordinate(c_extension) + 1
+    def _is_extendable_down(p: Point, max_p: Point, extension_p: Point, extension_max_p: Point, c: Coordinate) -> bool:
+        return p.get_coordinate(c) == extension_max_p.get_coordinate(c) + 1
+
+    @staticmethod
+    def _create_up_points(p: Point, max_p: Point, extension_p: Point, extension_max_p: Point, c: Coordinate) -> Tuple[Point, Point]:
+        new_p = p.with_coordinate(c, max(p.get_coordinate(c), extension_p.get_coordinate(c)))
+        new_max_p = extension_max_p.with_coordinate(c, min(max_p.get_coordinate(c), extension_max_p.get_coordinate(c)))
+        return new_p, new_max_p
+
+    @staticmethod
+    def _create_down_points(p: Point, max_p: Point, extension_p: Point, extension_max_p: Point, c: Coordinate) -> Tuple[Point, Point]:
+        new_p = extension_p.with_coordinate(c, max(p.get_coordinate(c), extension_p.get_coordinate(c)))
+        new_max_p = max_p.with_coordinate(c, min(max_p.get_coordinate(c), extension_max_p.get_coordinate(c)))
+        return new_p, new_max_p
 
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:

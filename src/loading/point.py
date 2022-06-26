@@ -30,7 +30,7 @@ class Point:
     def with_z(self, z: int) -> 'Point':
         return Point(self.x, self.y, z)
 
-    def with_coordinate(self, c_value: int, c: Coordinate) -> 'Point':
+    def with_coordinate(self, c: Coordinate, c_value: int) -> 'Point':
         if c == Coordinate.X:
             return Point(c_value, self._y, self._z)
         elif c == Coordinate.Y:

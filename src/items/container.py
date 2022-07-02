@@ -6,8 +6,9 @@ from src.items.util_items.item import Item
 from src.items.util_items.name_item import NameItem
 from src.items.util_items.volume_item import VolumeItem
 from src.loading.coordinate import Coordinate
-from src.loading.extension import Extension
+from src.loading.direction import Direction
 from src.loading.point import Point
+from src.loading.loadable_points_manager import LoadablePointsManager
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -16,7 +17,7 @@ from src.statistics.container_statistics import ContainerStatistics
 
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
-    _loadable_point_to_max_points: DefaultDict[Point, Set[Point]]
+    _loadable_points_manager: LoadablePointsManager
     _id_to_min_point_shifted: Dict[int, Point]
     _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
@@ -28,13 +29,12 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         VolumeItem.__init__(self, parameters)
         NameItem.__init__(self, parameters)
         self._parameters = parameters
-        self._loadable_point_to_max_points = defaultdict(set)
+        self._loadable_points_manager = LoadablePointsManager(parameters)
         self._id_to_min_point_shifted = {}
         self._min_point_to_id = {}
         self._id_to_shipment = {}
         self._loading_order = []
         self._container_statistics = ContainerStatistics()
-        self._insert_first_loadable_point()
 
     @property
     def parameters(self) -> ContainerParameters:
@@ -42,7 +42,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     @property
     def loadable_point_to_max_points(self) -> DefaultDict[Point, Set[Point]]:
-        return self._loadable_point_to_max_points
+        return self._loadable_points_manager.loadable_point_to_max_points
 
     @property
     def id_to_min_point_shifted(self) -> Dict[int, Point]:
@@ -87,13 +87,12 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._container_statistics.update(point, shipment.parameters)
 
     def unload(self) -> None:
-        self._loadable_point_to_max_points = defaultdict(set)
+        self._loadable_points_manager.reset()
         self._id_to_min_point_shifted = {}
         self._min_point_to_id = {}
         self._id_to_shipment = {}
         self._loading_order = []
-        self._container_statistics = ContainerStatistics()
-        self._insert_first_loadable_point()
+        self._container_statistics.reset()
 
     def can_load_into_point(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         if not self._volume_fits(point, shipment_params):
@@ -112,22 +111,22 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         response['ldm'] = self._container_statistics.ldm
         return response
 
-    def _insert_first_loadable_point(self) -> None:
-        loadable_point = Point(0, 0, 0)
-        loadable_max_point = Point(self._parameters.length - 1, self._parameters.width - 1, self._parameters.height - 1)
-        self._loadable_point_to_max_points[loadable_point].add(loadable_max_point)
-
     def _volume_fits(self, point: Point, shipment_params: ShipmentParameters) -> bool:
-        max_points = self._loadable_point_to_max_points[point]
+        max_points = self._loadable_points_manager.get_max_points(point)
         for max_point in max_points:
+            # print('Max point: {}'.format(max_point))
             v = VolumeParameters.from_points(point, max_point)
             if v.length < shipment_params.get_loading_length():
+                # print('length not ok: {}, {}'.format(v.length, shipment_params.get_loading_length()))
                 continue
             if v.width < shipment_params.get_loading_width():
+                # print('width not ok')
                 continue
             if v.height < shipment_params.height:
+                # print('height not ok')
                 continue
             return True
+        # print('Volume not ok')
         return False
 
     def _weight_fits(self, weight: int) -> bool:
@@ -137,166 +136,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
         loading_max_p = self._compute_max_point(loading_p, shipment.parameters)
-        bottom_points, top_points = self._select_points_for_update(loading_p, loading_max_p)
-        self._update_bottom_points(loading_p, loading_max_p, bottom_points)
-        if shipment.can_stack:
-            self._update_top_points(loading_p, loading_max_p, top_points)
-
-    def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> Tuple:
-        bottom_points, top_points = [], []
-        for p in self._loadable_point_to_max_points.keys():
-            # bottom points which should be cropped or moved outside
-            if p.z == loading_p.z and p.x <= loading_max_p.x and p.y <= loading_max_p.y:
-                bottom_points.append(p)
-            # top points which should be used for extension or can be extended
-            elif p.z == loading_max_p.z + 1 and p.x <= loading_max_p.x + 1 and p.y <= loading_max_p.y + 1:
-                top_points.append(p)
-        return bottom_points, top_points
-
-    def _update_bottom_points(self, loading_p: Point, loading_max_p: Point, points: List[Point]) -> None:
-        for p in points:
-            # remove point and iterate max points
-            for max_p in self._loadable_point_to_max_points.pop(p):
-                # should not be cropped
-                if max_p.x < loading_p.x or max_p.y < loading_p.y:
-                    self._loadable_point_to_max_points[p].add(max_p)
-                elif p.x >= loading_p.x and p.y >= loading_p.y:
-                    self._update_inside_bottom_point(p, max_p, loading_max_p)
-                else:
-                    self._update_outside_bottom_point(p, max_p, loading_p, loading_max_p)
-
-    def _update_inside_bottom_point(self, p: Point, max_p: Point, loading_max_p: Point) -> None:
-        # move point out of borders along x
-        if max_p.x > loading_max_p.x:
-            new_p_x = p.with_x(loading_max_p.x + 1)
-            self._loadable_point_to_max_points[new_p_x].add(max_p)
-        # move point out of borders along y
-        if max_p.y > loading_max_p.y:
-            new_p_y = p.with_y(loading_max_p.y + 1)
-            self._loadable_point_to_max_points[new_p_y].add(max_p)
-
-    def _update_outside_bottom_point(self, p: Point, max_p: Point, loading_p: Point, loading_max_p: Point) -> None:
-        # length should be cropped
-        if loading_p.x > p.x:
-            self._loadable_point_to_max_points[p].add(max_p.with_x(loading_p.x - 1))
-        # when length is split by new shipment
-        if max_p.x > loading_max_p.x:
-            new_p_x = p.with_x(loading_max_p.x + 1)
-            self._loadable_point_to_max_points[new_p_x].add(max_p)
-        # width should be cropped
-        if loading_p.y > p.y:
-            self._loadable_point_to_max_points[p].add(max_p.with_y(loading_p.y - 1))
-        # when width is split by new shipment
-        if max_p.y > loading_max_p.y:
-            new_p_y = p.with_y(loading_max_p.y + 1)
-            self._loadable_point_to_max_points[new_p_y].add(max_p)
-
-    def _update_top_points(self, loading_p: Point, loading_max_p: Point, points: List[Point]) -> None:
-        # insert point above
-        new_point = loading_p.with_z(loading_max_p.z + 1)
-        new_max_point = loading_max_p.with_z(self.height - 1)
-
-        # use it for extension
-        extension_points = defaultdict(set)
-        extension_points[new_point].add(new_max_point)
-
-        # extend width up
-        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, Extension.UP)
-        # extend length up
-        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, Extension.UP)
-        # extend width down
-        self._extend(points, extension_points, Coordinate.X, Coordinate.Y, Extension.DOWN)
-        # extend length down
-        self._extend(points, extension_points, Coordinate.Y, Coordinate.X, Extension.DOWN)
-
-        for extension_p, extension_max_points in extension_points.items():
-            self._loadable_point_to_max_points[extension_p] |= extension_max_points
-
-    def _extend(
-            self,
-            points: List[Point],
-            extension_points: DefaultDict[Point, Set[Point]],
-            c_clip: Coordinate,
-            c_extension: Coordinate,
-            extension_type: Extension
-    ) -> None:
-        cur_extension_points = defaultdict(set)
-        cur_points_for_delete = defaultdict(set)
-        for p in points:
-            for max_p in self._loadable_point_to_max_points[p]:
-                # try to use points for extension
-                for extension_p in extension_points.keys():
-                    for extension_max_p in extension_points[extension_p]:
-                        point_is_extendable = self._is_extendable_up(max_p, extension_p, c_extension) \
-                            if extension_type == Extension.UP \
-                            else self._is_extendable_down(p, extension_max_p, c_extension)
-                        if self._point_is_clipped(p, max_p, extension_p, extension_max_p, c_clip) and point_is_extendable:
-                            new_p, new_max_p = self._create_up_points(p, max_p, extension_p, extension_max_p, c_clip) \
-                                if extension_type == Extension.UP \
-                                else self._create_down_points(p, max_p, extension_p, extension_max_p, c_clip)
-                            cur_extension_points[new_p].add(new_max_p)
-                            if p.get_coordinate(c_clip) >= extension_p.get_coordinate(c_clip) \
-                                    and max_p.get_coordinate(c_clip) <= extension_max_p.get_coordinate(c_clip):
-                                cur_points_for_delete[p].add(max_p)
-                            if extension_p.get_coordinate(c_clip) >= p.get_coordinate(c_clip) \
-                                    and extension_max_p.get_coordinate(c_clip) <= max_p.get_coordinate(c_clip):
-                                cur_points_for_delete[extension_p].add(extension_max_p)
-        self._process_cur_extension_points(extension_points, cur_extension_points, cur_points_for_delete)
-
-    def _process_cur_extension_points(
-            self,
-            extension_points: DefaultDict[Point, Set[Point]],
-            cur_extension_points: DefaultDict[Point, Set[Point]],
-            cur_points_for_delete: DefaultDict[Point, Set[Point]]
-    ) -> None:
-        for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
-            extension_points[cur_extension_p] |= cur_extension_max_points
-        for point_for_delete, max_points_for_delete in cur_points_for_delete.items():
-            self._loadable_point_to_max_points[point_for_delete] -= max_points_for_delete
-            extension_points[point_for_delete] -= max_points_for_delete
-
-    @staticmethod
-    def _point_is_clipped(
-            p: Point,
-            max_p: Point,
-            extension_p: Point,
-            extension_max_p: Point,
-            c: Coordinate
-    ) -> bool:
-        return max_p.get_coordinate(c) >= extension_p.get_coordinate(c) \
-               and p.get_coordinate(c) <= extension_max_p.get_coordinate(c)
-
-    @staticmethod
-    def _is_extendable_up(max_p: Point, extension_p: Point, c: Coordinate) -> bool:
-        return max_p.get_coordinate(c) + 1 == extension_p.get_coordinate(c)
-
-    @staticmethod
-    def _is_extendable_down(p: Point, extension_max_p: Point, c: Coordinate) -> bool:
-        return p.get_coordinate(c) == extension_max_p.get_coordinate(c) + 1
-
-    @staticmethod
-    def _create_up_points(
-            p: Point,
-            max_p: Point,
-            extension_p: Point,
-            extension_max_p: Point,
-            c: Coordinate
-    ) -> Tuple[Point, Point]:
-        new_p = p.with_coordinate(c, max(p.get_coordinate(c), extension_p.get_coordinate(c)))
-        new_max_p = extension_max_p.with_coordinate(c, min(max_p.get_coordinate(c), extension_max_p.get_coordinate(c)))
-        return new_p, new_max_p
-
-    @staticmethod
-    def _create_down_points(
-            p: Point,
-            max_p: Point,
-            extension_p: Point,
-            extension_max_p: Point,
-            c: Coordinate
-    ) -> Tuple[Point, Point]:
-        new_p = extension_p.with_coordinate(c, max(p.get_coordinate(c), extension_p.get_coordinate(c)))
-        new_max_p = max_p.with_coordinate(c, min(max_p.get_coordinate(c), extension_max_p.get_coordinate(c)))
-        return new_p, new_max_p
+        self._loadable_points_manager.update_points(loading_p, loading_max_p, shipment.can_stack)
 
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:

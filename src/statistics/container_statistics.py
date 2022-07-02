@@ -11,10 +11,7 @@ class ContainerStatistics:
     _ldm: float
 
     def __init__(self) -> None:
-        self._loaded_volume = 0
-        self._loaded_length = 0
-        self._loaded_width = 0
-        self._ldm = 0
+        self.reset()
 
     @property
     def loaded_volume(self) -> float:
@@ -31,6 +28,12 @@ class ContainerStatistics:
     @property
     def ldm(self) -> float:
         return self._ldm
+
+    def reset(self) -> None:
+        self._loaded_volume = 0
+        self._loaded_length = 0
+        self._loaded_width = 0
+        self._ldm = 0
 
     def update(self, point: Point, shipment_params: ShipmentParameters) -> None:
         self._loaded_volume += shipment_params.compute_loading_volume()

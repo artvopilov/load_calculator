@@ -16,11 +16,11 @@ CONTAINER_COUNTS_2 = {
 }
 SHIPMENT_COUNTS = {
     ShipmentParameters('', '', length=1000, width=500, height=300, weight=100, color='blue', can_stack=True,
-                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 80,  # 100
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0): 100,  # 100
     ShipmentParameters('', '', length=600, width=300, height=200, weight=50, color='green', can_stack=True,
-                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 50,
-    # ShipmentParameters('', '', length=500, width=500, height=300, weight=30, color='red', can_stack=False,
-    #                    height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 80,
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 50,  # 50
+    ShipmentParameters('', '', length=500, width=500, height=300, weight=30, color='red', can_stack=False,
+                       height_as_height=True, length_as_height=True, width_as_height=True, extension=0.01): 80,  # 80
 }
 SHIPMENT_COUNTS_2 = {
     ShipmentParameters('', '', length=1200, width=4600, height=1300, weight=100, color='darkblue', can_stack=False,

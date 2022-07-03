@@ -55,7 +55,42 @@ class Point:
             return self.x == other.x \
                    and self.y == other.y \
                    and self.z == other.z
+        return False
 
+    def __lt__(self, other: 'Point') -> bool:
+        if self._x < other.x:
+            return True
+        elif self._x == other.x and self._y < other.y:
+            return True
+        elif self._x == other.x and self._y == other.y and self._z < other.z:
+            return True
+        return False
+
+    def __gt__(self, other: 'Point') -> bool:
+        if self._x > other.x:
+            return True
+        elif self._x == other.x and self._y > other.y:
+            return True
+        elif self._x == other.x and self._y == other.y and self._z > other.z:
+            return True
+        return False
+
+    def __le__(self, other: 'Point') -> bool:
+        if self._x < other.x:
+            return True
+        elif self._x == other.x and self._y < other.y:
+            return True
+        elif self._x == other.x and self._y == other.y and self._z <= other.z:
+            return True
+        return False
+
+    def __ge__(self, other: 'Point') -> bool:
+        if self._x > other.x:
+            return True
+        elif self._x == other.x and self._y > other.y:
+            return True
+        elif self._x == other.x and self._y == other.y and self._z >= other.z:
+            return True
         return False
 
     def __hash__(self):

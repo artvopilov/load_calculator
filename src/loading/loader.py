@@ -62,17 +62,10 @@ class Loader:
             min_point_to_id = container.min_point_to_id
             id_to_shipment = container.id_to_shipment
             container.unload()
-            while len(min_point_to_id) > 1:
+            while len(min_point_to_id) > 0:
                 last_loaded_point = None
                 for point in VerticalPointsIterator(min_point_to_id.keys()):
-                    print(point)
                     shipment = id_to_shipment[min_point_to_id[point]]
-                    print(shipment.parameters)
-                    print('Points loadable:')
-                    for p, max_points in container.loadable_point_to_max_points.items():
-                        for max_p in max_points:
-                            print('{}: {}'.format(p, max_p))
-                    print('-------')
                     can_load = container.can_load_into_point(point, shipment.parameters)
                     if can_load:
                         if last_loaded_point and last_loaded_point.x != point.x:  # or last_loaded_point.z != point.z):
@@ -80,8 +73,6 @@ class Loader:
                         container.load(point, shipment)
                         min_point_to_id.pop(point)
                         last_loaded_point = point
-                # print(len(min_point_to_id))
-
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
@@ -149,9 +140,7 @@ class Loader:
     ) -> Optional[Tuple[Point, ShipmentParameters]]:
         self._logger.info("Iterating container")
         for shipment_params in shipment_params_variations:
-            # self._logger.info(f'Loading variation: {shipment_params}')
             for point in self._get_points_iterator(container):
-                # self._logger.info(f"Checking point {point}")
                 can_load = container.can_load_into_point(point, shipment_params)
                 if can_load:
                     return point, shipment_params

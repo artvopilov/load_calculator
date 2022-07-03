@@ -99,11 +99,11 @@ class LoadablePointsManager:
                 if border_p.get_coordinate(c_clip) != p.get_coordinate(c_clip) \
                         or border_max_p.get_coordinate(c_clip) != max_p.get_coordinate(c_clip):
                     continue
-                if border_p.get_coordinate(c_consume) <= max_p.get_coordinate(c_consume) \
-                        and border_max_p.get_coordinate(c_consume) >= p.get_coordinate(c_consume):
+                if border_p.get_coordinate(c_consume) <= p.get_coordinate(c_consume) \
+                        and border_max_p.get_coordinate(c_consume) >= max_p.get_coordinate(c_consume):
                     return
-                elif border_p.get_coordinate(c_consume) >= max_p.get_coordinate(c_consume) \
-                        and border_max_p.get_coordinate(c_consume) <= p.get_coordinate(c_consume):
+                elif border_p.get_coordinate(c_consume) >= p.get_coordinate(c_consume) \
+                        and border_max_p.get_coordinate(c_consume) <= max_p.get_coordinate(c_consume):
                     border_points_for_remove[border_p].add(border_max_p)
         self._insert_bottom_point(p, max_p, border_points, border_points_for_remove)
 

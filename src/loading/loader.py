@@ -3,11 +3,11 @@ from typing import Dict, List, Tuple, Optional
 
 from src.items.container import Container
 from src.items.item_fabric import ItemFabric
-from src.loading.point import Point
 from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
 from src.iterators.points.points_iterator import PointsIterator
 from src.iterators.points.vertical_points_iterator import VerticalPointsIterator
 from src.loading.loading_type import LoadingType
+from src.loading.point import Point
 from src.logger.logger import Logger
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -77,7 +77,7 @@ class Loader:
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
             self._shipment_params_to_count.keys(),
-            key=lambda s: [s.can_stack] + s.get_volume_params_sorted() + [s.weight],
+            key=lambda s: [s.weight] + [s.can_stack] + s.get_volume_params_sorted(),
             reverse=True))
 
     def _count_shipments(self):

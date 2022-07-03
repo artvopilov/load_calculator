@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Tuple, DefaultDict, Set
+from typing import Tuple, DefaultDict, Set, Optional
 
 from src.loading.coordinate import Coordinate
 from src.loading.direction import Direction
@@ -38,7 +38,7 @@ class LoadablePointsManager:
             points_for_update.bottom_inner_points,
             points_for_update.bottom_border_points)
         if update_top_points:
-            self._update_top_points(loading_p, loading_max_p, points_for_update)
+            self._update_top_points(loading_p, loading_max_p, points_for_update.top_border_points)
 
     def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> PointsForUpdate:
         points_for_update = PointsForUpdate()
@@ -120,131 +120,108 @@ class LoadablePointsManager:
             border_points[border_p] -= border_max_points
             self._loadable_point_to_max_points[border_p] -= border_max_points
 
-    # def _update_top_points(
-    #         self,
-    #         loading_p: Point,
-    #         loading_max_p: Point,
-    #         top_border_points: DefaultDict[Point, Set[Point]]
-    # ) -> None:
-    #     print('Updating top points')
-    #     for p, max_points in top_border_points.items():
-    #         for max_p in max_points:
-    #             print('{}: {}'.format(str(p), str(max_p)))
-    #     print('---------')
-    #
-    #     new_point = loading_p.with_z(loading_max_p.z + 1)
-    #     new_max_point = loading_max_p.with_z(self._params.height - 1)
-    #
-    #     extension_points = defaultdict(set)
-    #     extension_points[new_point].add(new_max_point)
-    #
-    #     for border_p, border_max_points in top_border_points.items():
-    #         for border_max_p in border_max_points:
-    #             self._try_extend_top_point(border_p, border_max_p, extension_points)
+    def _update_top_points(
+            self,
+            loading_p: Point,
+            loading_max_p: Point,
+            top_border_points: DefaultDict[Point, Set[Point]]
+    ) -> None:
+        new_point = loading_p.with_z(loading_max_p.z + 1)
+        new_max_point = loading_max_p.with_z(self._params.height - 1)
+
+        extension_points = defaultdict(set)
+        extension_points[new_point].add(new_max_point)
+
+        self._extend_top_border_points(top_border_points, extension_points)
+
+        self._remove_extra_top_border_points(top_border_points, extension_points)
+
+        self._save_extension_points(extension_points)
+
+    def _extend_top_border_points(
+            self,
+            top_border_points: DefaultDict[Point, Set[Point]],
+            extension_points: DefaultDict[Point, Set[Point]]
+    ) -> None:
+        for border_p, border_max_points in top_border_points.items():
+            for border_max_p in border_max_points:
+                extension_points_for_add = defaultdict(set)
+                extension_points_for_remove = defaultdict(set)
+
+                for extension_p, extension_max_points in extension_points.items():
+                    for extension_max_p in extension_max_points:
+                        new_points = self._try_extend_top_point(border_p, border_max_p, extension_p, extension_max_p)
+                        if new_points is not None:
+                            new_p, new_max_p = new_points
+                            extension_points_for_add[new_p].add(new_max_p)
+                            if self._point_is_inside(extension_p, extension_max_p, new_p, new_max_p):
+                                extension_points_for_remove[extension_p].add(extension_max_p)
+
+                for p, max_points in extension_points_for_add.items():
+                    extension_points[p] |= max_points
+                for p, max_points in extension_points_for_remove.items():
+                    extension_points[p] -= max_points
+
+    def _remove_extra_top_border_points(
+            self,
+            top_border_points: DefaultDict[Point, Set[Point]],
+            extension_points: DefaultDict[Point, Set[Point]]
+    ) -> None:
+        for border_p, border_max_points in top_border_points.items():
+            for border_max_p in border_max_points:
+                if self._should_remove_top_border_point(border_p, border_max_p, extension_points):
+                    self._loadable_point_to_max_points[border_p].remove(border_max_p)
+
+    def _save_extension_points(self, extension_points: DefaultDict[Point, Set[Point]]) -> None:
+        for extension_p, extension_max_points in extension_points.items():
+            for extension_max_p in extension_max_points:
+                self._loadable_point_to_max_points[extension_p].add(extension_max_p)
 
     def _try_extend_top_point(
             self,
             border_p: Point,
             border_max_p: Point,
-            extension_points: DefaultDict[Point, Set[Point]]
-    ) -> None:
-        for extension_p, extension_max_points in extension_points.items():
-            for extension_max_p in extension_max_points:
-                if self._is_extendable_up(border_max_p, extension_p, Coordinate.X):
-                    new_p, new_max_p = self._create_up_points(border_p, border_max_p, extension_p, extension_max_p, Coordinate.Y)
-                if self._is_extendable_up(border_max_p, extension_p, Coordinate.Y):
-                    new_p, new_max_p = self._create_up_points(border_p, border_max_p, extension_p, extension_max_p, Coordinate.X)
-                if self._is_extendable_down(border_p, extension_max_p, Coordinate.X):
-                    new_p, new_max_p = self._create_up_points(border_p, border_max_p, extension_p, extension_max_p, Coordinate.Y)
-                if self._is_extendable_down(border_p, extension_max_p, Coordinate.Y):
-                    new_p, new_max_p = self._create_up_points(border_p, border_max_p, extension_p, extension_max_p, Coordinate.X)
+            extension_p: Point,
+            extension_max_p: Point
+    ) -> Optional[Tuple[Point, Point]]:
+        if self._is_extendable_up(border_max_p, extension_p, Coordinate.X):
+            return self._extend_top_point(border_p, border_max_p, extension_p, extension_max_p, Coordinate.Y, Direction.UP)
+        elif self._is_extendable_up(border_max_p, extension_p, Coordinate.Y):
+            return self._extend_top_point(border_p, border_max_p, extension_p, extension_max_p, Coordinate.X, Direction.UP)
+        elif self._is_extendable_down(border_p, extension_max_p, Coordinate.X):
+            return self._extend_top_point(border_p, border_max_p, extension_p, extension_max_p, Coordinate.Y, Direction.DOWN)
+        elif self._is_extendable_down(border_p, extension_max_p, Coordinate.Y):
+            return self._extend_top_point(border_p, border_max_p, extension_p, extension_max_p, Coordinate.X, Direction.DOWN)
 
     def _extend_top_point(
             self,
-            border_p: Point,
-            border_max_p: Point,
-            extension_p: Point,
-            extension_max_p: Point,
-            c: Coordinate
-    ) -> None:
-        new_p, new_max_p = self._create_up_points(border_p, border_max_p, extension_p, extension_max_p, c)
-
-
-
-    def _update_top_points(self, loading_p: Point, loading_max_p: Point, points_for_update: PointsForUpdate) -> None:
-        # create point above
-        new_point = loading_p.with_z(loading_max_p.z + 1)
-        new_max_point = loading_max_p.with_z(self._params.height - 1)
-
-        # use it for extension
-        extension_points = defaultdict(set)
-        extension_points[new_point].add(new_max_point)
-
-        # extend width up
-        self._extend(points_for_update.top_border_points, extension_points, Coordinate.X, Coordinate.Y, Direction.UP)
-        # extend length up
-        self._extend(points_for_update.top_border_points, extension_points, Coordinate.Y, Coordinate.X, Direction.UP)
-        # extend width down
-        self._extend(points_for_update.top_border_points, extension_points, Coordinate.X, Coordinate.Y, Direction.DOWN)
-        # extend length down
-        self._extend(points_for_update.top_border_points, extension_points, Coordinate.Y, Coordinate.X, Direction.DOWN)
-
-        for extension_p, extension_max_points in extension_points.items():
-            self._loadable_point_to_max_points[extension_p] |= extension_max_points
-
-    def _extend(
-            self,
-            points: DefaultDict[Point, Set[Point]],
-            extension_points: DefaultDict[Point, Set[Point]],
-            c_clip: Coordinate,
-            c_extension: Coordinate,
-            d: Direction
-    ) -> None:
-        cur_extension_points = defaultdict(set)
-        cur_points_for_remove = defaultdict(set)
-        for p, max_points in points.items():
-            for max_p in max_points:
-                # try to use points for extension
-                for extension_p in extension_points.keys():
-                    for extension_max_p in extension_points[extension_p]:
-                        point_is_extendable = self._is_extendable_up(max_p, extension_p, c_extension) \
-                            if d == Direction.UP \
-                            else self._is_extendable_down(p, extension_max_p, c_extension)
-                        if self._point_is_clipped(p, max_p, extension_p, extension_max_p, c_clip) and point_is_extendable:
-                            new_p, new_max_p = self._create_up_points(p, max_p, extension_p, extension_max_p, c_clip) \
-                                if d == Direction.UP \
-                                else self._create_down_points(p, max_p, extension_p, extension_max_p, c_clip)
-                            cur_extension_points[new_p].add(new_max_p)
-                            if p.get_coordinate(c_clip) >= extension_p.get_coordinate(c_clip) \
-                                    and max_p.get_coordinate(c_clip) <= extension_max_p.get_coordinate(c_clip):
-                                cur_points_for_remove[p].add(max_p)
-                            if extension_p.get_coordinate(c_clip) >= p.get_coordinate(c_clip) \
-                                    and extension_max_p.get_coordinate(c_clip) <= max_p.get_coordinate(c_clip):
-                                cur_points_for_remove[extension_p].add(extension_max_p)
-        self._process_cur_extension_points(extension_points, cur_extension_points, cur_points_for_remove)
-
-    def _process_cur_extension_points(
-            self,
-            extension_points: DefaultDict[Point, Set[Point]],
-            cur_extension_points: DefaultDict[Point, Set[Point]],
-            cur_points_for_remove: DefaultDict[Point, Set[Point]]
-    ) -> None:
-        for cur_extension_p, cur_extension_max_points in cur_extension_points.items():
-            extension_points[cur_extension_p] |= cur_extension_max_points
-        for point_for_remove, max_points_for_remove in cur_points_for_remove.items():
-            self._loadable_point_to_max_points[point_for_remove] -= max_points_for_remove
-            extension_points[point_for_remove] -= max_points_for_remove
-
-    @staticmethod
-    def _point_is_clipped(
             p: Point,
             max_p: Point,
             extension_p: Point,
             extension_max_p: Point,
-            c: Coordinate
+            c: Coordinate,
+            d: Direction
+    ) -> Tuple[Point, Point]:
+        if d == Direction.UP:
+            return self._create_up_points(p, max_p, extension_p, extension_max_p, c)
+        else:
+            return self._create_down_points(p, max_p, extension_p, extension_max_p, c)
+
+    def _should_remove_top_border_point(
+            self,
+            border_p: Point,
+            border_max_p: Point,
+            extension_points: DefaultDict[Point, Set[Point]]
     ) -> bool:
-        return max_p.get_coordinate(c) >= extension_p.get_coordinate(c) \
-               and p.get_coordinate(c) <= extension_max_p.get_coordinate(c)
+        for extension_p, extension_max_points in extension_points.items():
+            for extension_max_p in extension_max_points:
+                if self._point_is_inside(border_p, border_max_p, extension_p, extension_max_p):
+                    return True
+        return False
+
+    @staticmethod
+    def _point_is_inside(p: Point, max_p: Point, new_p: Point, new_max_p: Point) -> bool:
+        return p.x >= new_p.x and p.y >= new_p.y and max_p.x <= new_max_p.x and max_p.y <= new_max_p.y
 
     @staticmethod
     def _is_extendable_up(max_p: Point, extension_p: Point, c: Coordinate) -> bool:
@@ -254,7 +231,6 @@ class LoadablePointsManager:
     def _is_extendable_down(p: Point, extension_max_p: Point, c: Coordinate) -> bool:
         return p.get_coordinate(c) == extension_max_p.get_coordinate(c) + 1
 
-    # TODO: Leave either _create_new_top_points or _create_down_points
     @staticmethod
     def _create_up_points(
             p: Point,
@@ -278,7 +254,6 @@ class LoadablePointsManager:
         new_p = extension_p.with_coordinate(c, max(p.get_coordinate(c), extension_p.get_coordinate(c)))
         new_max_p = max_p.with_coordinate(c, min(max_p.get_coordinate(c), extension_max_p.get_coordinate(c)))
         return new_p, new_max_p
-
 
     @staticmethod
     def _point_meets_update(p: Point, loading_p: Point, loading_max_p: Point) -> bool:

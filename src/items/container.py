@@ -1,14 +1,11 @@
-from collections import defaultdict
 from typing import Dict, Tuple, List, Set, DefaultDict
 
 from src.items.shipment import Shipment
 from src.items.util_items.item import Item
 from src.items.util_items.name_item import NameItem
 from src.items.util_items.volume_item import VolumeItem
-from src.loading.coordinate import Coordinate
-from src.loading.direction import Direction
-from src.loading.point import Point
 from src.loading.loadable_points_manager import LoadablePointsManager
+from src.loading.point import Point
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -114,19 +111,14 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     def _volume_fits(self, point: Point, shipment_params: ShipmentParameters) -> bool:
         max_points = self._loadable_points_manager.get_max_points(point)
         for max_point in max_points:
-            # print('Max point: {}'.format(max_point))
             v = VolumeParameters.from_points(point, max_point)
             if v.length < shipment_params.get_loading_length():
-                # print('length not ok: {}, {}'.format(v.length, shipment_params.get_loading_length()))
                 continue
             if v.width < shipment_params.get_loading_width():
-                # print('width not ok')
                 continue
             if v.height < shipment_params.height:
-                # print('height not ok')
                 continue
             return True
-        # print('Volume not ok')
         return False
 
     def _weight_fits(self, weight: int) -> bool:

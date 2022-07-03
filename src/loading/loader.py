@@ -98,7 +98,8 @@ class Loader:
     def _get_available_container_params(self) -> List[ContainerParameters]:
         return list(map(lambda x: x[0], filter(lambda x: x[1] != 0, self._container_params_to_count.items())))
 
-    def _select_max_loaded_container(self, containers: List[Container]) -> Container:
+    @staticmethod
+    def _select_max_loaded_container(containers: List[Container]) -> Container:
         max_loaded_container = None
         for container in containers:
             if max_loaded_container is None or container.get_loaded_volume() > max_loaded_container.get_loaded_volume():

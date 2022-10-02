@@ -102,6 +102,8 @@ class Loader:
     def _select_max_loaded_container(containers: List[Container]) -> Container:
         max_loaded_container = None
         for container in containers:
+            if container.get_loaded_volume() <= 0:
+                continue
             if max_loaded_container is None or container.get_loaded_volume() > max_loaded_container.get_loaded_volume():
                 max_loaded_container = container
         return max_loaded_container

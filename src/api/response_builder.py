@@ -1,4 +1,3 @@
-from collections import defaultdict
 from typing import Dict, List, Any
 
 from flask import jsonify, Response
@@ -9,7 +8,7 @@ from src.parameters.shipment_parameters import ShipmentParameters
 
 class ResponseBuilder:
     def build(self, containers: List[Container], left_shipment_counts: Dict[ShipmentParameters, int]) -> Response:
-        response = defaultdict(list)
+        response = {'containers': [], 'left_cargos': []}
         for container in containers:
             response['containers'].append(self._build_container_response(container))
 

@@ -38,3 +38,7 @@ def calculate():
 
     response_builder = ResponseBuilder()
     return response_builder.build(loaded_containers, loader.get_left_shipments_counts())
+
+
+if __name__ == '__main__':
+    app.run()

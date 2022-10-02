@@ -35,7 +35,7 @@ class Loader:
         self._logger = logger
 
     def get_left_shipments_counts(self) -> Dict[ShipmentParameters, int]:
-        return self._shipment_params_to_count
+        return {shipment_params: c for shipment_params, c in self._shipment_params_to_count.items() if c > 0}
 
     def load(self) -> List[Container]:
         containers = self._compute_loading_locations()

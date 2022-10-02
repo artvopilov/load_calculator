@@ -1,5 +1,3 @@
-from typing import Dict
-
 from src.items.container import Container
 from src.items.shipment import Shipment
 from src.parameters.container_parameters import ContainerParameters

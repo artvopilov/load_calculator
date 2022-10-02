@@ -44,7 +44,7 @@ class RequestParser:
         length = cargo_request['length']
         width = cargo_request['width']
         height = cargo_request['height']
-        diameter = cargo_request['diameter']
+        diameter = cargo_request.get('diameter', None)
         if diameter:
             length = diameter
             width = diameter

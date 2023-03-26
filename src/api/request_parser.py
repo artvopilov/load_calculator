@@ -35,12 +35,14 @@ class RequestParser:
             shipment_counts[shipment_params] = cargo['number']
         return shipment_counts
 
-    def _parse_loading_type(self, request: Request) -> LoadingType:
+    @staticmethod
+    def _parse_loading_type(request: Request) -> LoadingType:
         if 'loading_type' in request.json:
             return LoadingType.from_name(request.json['loading_type'])
         return LoadingType.STABLE
 
-    def _create_shipment_params(self, cargo_request: Dict) -> ShipmentParameters:
+    @staticmethod
+    def _create_shipment_params(cargo_request: Dict) -> ShipmentParameters:
         length = cargo_request['length']
         width = cargo_request['width']
         height = cargo_request['height']
@@ -65,7 +67,8 @@ class RequestParser:
             cargo_request['width_as_height'],
             extension)
 
-    def _create_container_params(self, container_request: Dict) -> ContainerParameters:
+    @staticmethod
+    def _create_container_params(container_request: Dict) -> ContainerParameters:
         return ContainerParameters(
             container_request['type'],
             container_request['length'],

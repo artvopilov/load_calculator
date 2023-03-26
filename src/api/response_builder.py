@@ -15,7 +15,7 @@ class ResponseBuilder:
         for shipment_params, left_count in left_shipment_counts.items():
             response['left_cargos'].append(self._build_left_cargo_response(shipment_params, left_count))
 
-        return jsonify(response)
+        return response
 
     def _build_container_response(self, container: Container) -> Dict[str, Any]:
         id_to_shipment_params = {}

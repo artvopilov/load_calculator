@@ -8,6 +8,10 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 Flask = "^2.2.2"
+loguru = "^0.6.0"
+matplotlib = "^3.7.1"
+pandas = "^1.5.3"
+tqdm = "^4.65.0"
 
 
 [build-system]

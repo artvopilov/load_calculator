@@ -1,24 +1,24 @@
 import random
+import sys
 from datetime import datetime
 
 import matplotlib.colors as mcolors
 import pandas as pd
+from loguru import logger
 
 from src.api.response_builder import ResponseBuilder
-from src.dev.constants import CONTAINER_COUNTS, CONTAINER_COUNTS_2, \
-    SHIPMENT_COUNTS_3, AUTO_CONTAINERS
+from src.dev.constants import CONTAINER_COUNTS, SHIPMENT_COUNTS_2, AUTO_CONTAINERS
 from src.dev.image_3d_creator import Image3dCreator
 from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
 from src.loading.loading_type import LoadingType
-from src.logger.console_logger import ConsoleLogger
 from src.parameters.shipment_parameters import ShipmentParameters
 
 COLORS = list(mcolors.CSS4_COLORS.keys())
 
 
 def test_from_file() -> None:
-    file_path = '/Users/artemvopilov/Business/LoadCalculator/testCases/caseOne.ods'
+    file_path = '/tests/caseOne.ods'
     df = pd.read_excel(file_path, engine='odf', header=1, usecols=['Наименование', 'Упаковок', 'Размер коробки'],
                        skiprows=[2], skipfooter=1)
     names = df['Наименование']
@@ -34,24 +34,23 @@ def test_from_file() -> None:
     print(f'Read {len(shipment_counts)} shipments')
 
     item_fabric = ItemFabric()
-    logger = ConsoleLogger()
-    loader = Loader(CONTAINER_COUNTS, shipment_counts, LoadingType.STABLE, item_fabric, logger)
+    loader = Loader(CONTAINER_COUNTS, shipment_counts, LoadingType.STABLE, item_fabric)
     test_loading(loader)
 
 
 def test_from_constants() -> None:
     item_fabric = ItemFabric()
-    logger = ConsoleLogger()
-    loader = Loader(AUTO_CONTAINERS, SHIPMENT_COUNTS_3, LoadingType.COMPACT, item_fabric, logger)
+    loader = Loader(AUTO_CONTAINERS, SHIPMENT_COUNTS_2, LoadingType.COMPACT, item_fabric)
     test_loading(loader)
 
 
 def test_loading(loader: Loader) -> None:
-    loaded_containers = loader.load()
-    left_shipment_counts = loader.get_left_shipments_counts()
+    loader.load()
+    loaded_containers = loader.containers
+    left_shipment_counts = loader.shipment_params
 
     response_builder = ResponseBuilder()
-    print(response_builder.build(loaded_containers, loader.get_left_shipments_counts()))
+    print(response_builder.build(loaded_containers, left_shipment_counts))
 
     now = datetime.now()
     image_3d_creator = Image3dCreator(now)
@@ -64,4 +63,7 @@ def test_loading(loader: Loader) -> None:
 
 
 if __name__ == '__main__':
+    logger.remove()
+    logger.add(sys.stdout, level='DEBUG')
+
     test_from_constants()

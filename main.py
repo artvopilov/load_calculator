@@ -64,6 +64,6 @@ def test_loading(loader: Loader) -> None:
 
 if __name__ == '__main__':
     logger.remove()
-    logger.add(sys.stdout, level='DEBUG')
+    logger.add(sys.stdout, level='INFO')
 
     test_from_constants()

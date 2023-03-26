@@ -7,6 +7,9 @@ from src.api.response_builder import ResponseBuilder
 from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
 
+logger.remove()
+logger.add('{time}.log', level='INFO', rotation='00:00', retention=90)
+
 app = Flask(__name__)
 
 
@@ -34,11 +37,5 @@ def calculate():
     return response_builder.build(loader.containers, loader.shipment_params)
 
 
-def main() -> None:
-    logger.remove()
-    logger.add('{time}.log', level='INFO', rotation='00:00', retention=90)
-    app.run()
-
-
 if __name__ == '__main__':
-    main()
+    app.run()

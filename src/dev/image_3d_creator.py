@@ -101,9 +101,7 @@ class Image3dCreator:
 
         for shipment_id in container.loading_order[:shipments_num]:
             point = container.id_to_min_point_shifted[shipment_id]
-            print(point)
             shipment = container.id_to_shipment[shipment_id]
-            print(shipment)
             self._add_cube_data(point, shipment, cubes, colors)
 
         return Poly3DCollection(
@@ -122,10 +120,8 @@ class Image3dCreator:
         polygons[:, :, 0] *= size.length
         polygons[:, :, 1] *= size.width
         polygons[:, :, 2] *= size.height
-        print(polygons)
 
         polygons += np.array([point.x, point.y, point.z])
-        print(polygons)
         return polygons
 
     def _plot_cubes(self, ax: Axes3D, container: Container) -> None:

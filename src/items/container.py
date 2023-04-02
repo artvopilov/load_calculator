@@ -57,6 +57,10 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
     def loading_order(self) -> List[int]:
         return self._loading_order
 
+    @property
+    def container_statistics(self) -> ContainerStatistics:
+        return self._container_statistics
+
     def _key(self) -> Tuple:
         return self.id, self._parameters.length, self._parameters.width, \
                self._parameters.height, self._parameters.lifting_capacity

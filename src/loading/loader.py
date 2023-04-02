@@ -47,8 +47,8 @@ class Loader:
         self._compute_loading_order()
         logger.info(f'Loaded, '
                     f'containers: {len(self._containers)}, '
-                    f'loaded shipments: {sum([len(c.id_to_shipment) for c in self.containers])}, '
-                    f'left shipments: {sum([cnt for cnt in self._shipment_params.values()])}')
+                    f'loaded shipments: {sum([c.container_statistics.shipments for c in self.containers])}, '
+                    f'left shipments: {self._count_shipments()}')
 
     def _compute_loading_locations(self) -> None:
         self._containers = []
@@ -114,10 +114,12 @@ class Loader:
     def _select_max_loaded_container(containers: List[Container]) -> Container:
         max_loaded_container = None
         for container in containers:
+            logger.debug(f'{container} loaded volume: {container.get_loaded_volume()}')
             if container.get_loaded_volume() <= 0:
                 continue
             if max_loaded_container is None or container.get_loaded_volume() > max_loaded_container.get_loaded_volume():
                 max_loaded_container = container
+        logger.debug(f'{max_loaded_container} has max loaded volume: {max_loaded_container.get_loaded_volume()}')
         return max_loaded_container
 
     def _load_shipments(

@@ -8,8 +8,8 @@ from src.items.item_fabric import ItemFabric
 from src.loading.loader import Loader
 
 logger.remove()
-logger.add('{time}_info.log', level='INFO', rotation='00:00', retention=90)
-logger.add('{time}_debug.log', level='DEBUG', rotation='00:00', retention=7)
+logger.add('logs/{time:YYYY-MM-DD}_info.log', level='INFO', rotation='00:00', retention=90)
+logger.add('logs/{time:YYYY-MM-DD}_debug.log', level='DEBUG', rotation='00:00', retention=7)
 
 app = Flask(__name__)
 

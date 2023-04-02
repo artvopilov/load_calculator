@@ -66,6 +66,7 @@ class Loader:
             logger.debug(f'Left shipments: {self._count_shipments()}')
 
     def _compute_loading_order(self) -> None:
+        logger.debug('Computing loading order')
         for container in self._containers:
             min_point_to_id = container.min_point_to_id
             id_to_shipment = container.id_to_shipment
@@ -81,6 +82,8 @@ class Loader:
                         container.load(point, shipment)
                         min_point_to_id.pop(point)
                         last_loaded_point = point
+                        logger.debug(f'Next loading shipment: {shipment}, point: {point}, left: {len(min_point_to_id)}')
+
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(

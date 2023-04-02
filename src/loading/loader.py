@@ -45,6 +45,10 @@ class Loader:
     def load(self) -> None:
         self._compute_loading_locations()
         self._compute_loading_order()
+        logger.info(f'Loaded, '
+                    f'containers: {len(self._containers)}, '
+                    f'loaded shipments: {sum([len(c.id_to_shipment) for c in self.containers])}, '
+                    f'left shipments: {sum([cnt for cnt in self._shipment_params.values()])}')
 
     def _compute_loading_locations(self) -> None:
         self._containers = []

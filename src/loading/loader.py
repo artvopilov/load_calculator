@@ -62,6 +62,8 @@ class Loader:
             self._container_params[max_loaded_container.parameters] -= 1
             for shipment_params, count in containers_to_shipment_counts[max_loaded_container].items():
                 self._reduce_shipments(shipment_params, count)
+            logger.debug(f'Loaded containers: {len(self._containers)}')
+            logger.debug(f'Left shipments: {self._count_shipments()}')
 
     def _compute_loading_order(self) -> None:
         for container in self._containers:

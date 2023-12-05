@@ -56,7 +56,7 @@ def main(file_path: Optional[str], loading_type: str):
     for shipment_params, cnt in shipment_counts.items():
         logger.info(str(shipment_params), cnt)
 
-    loader = Loader({}, shipment_counts, LoadingType.from_name(loading_type), True, ItemFabric())
+    loader = Loader({}, shipment_counts, LoadingType.from_name(loading_type), False, ItemFabric())
     loader.load()
 
     loaded_containers = loader.containers

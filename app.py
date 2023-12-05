@@ -32,7 +32,7 @@ def calculate():
         request_data.container_params,
         request_data.shipment_params,
         request_data.loading_type,
-        True,
+        False,
         ItemFabric()
     )
     loader.load()

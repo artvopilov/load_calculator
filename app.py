@@ -1,7 +1,6 @@
 from flask import Flask, request
 from loguru import logger
 
-from src.api.constants import AUTO_CONTAINERS
 from src.api.request_parser import RequestParser
 from src.api.response_builder import ResponseBuilder
 from src.items.item_fabric import ItemFabric
@@ -29,9 +28,13 @@ def calculate():
     request_parser = RequestParser()
     request_data = request_parser.parse(request)
 
-    container_params = request_data.container_params or {c: -1 for c in AUTO_CONTAINERS}
-    item_fabric = ItemFabric()
-    loader = Loader(container_params, request_data.shipment_params, request_data.loading_type, item_fabric)
+    loader = Loader(
+        request_data.container_params,
+        request_data.shipment_params,
+        request_data.loading_type,
+        True,
+        ItemFabric()
+    )
     loader.load()
 
     response_builder = ResponseBuilder()

@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 
-from flask import jsonify, Response
+from flask import Response
 
 from src.items.container import Container
 from src.parameters.shipment_parameters import ShipmentParameters

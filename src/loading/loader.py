@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional
 
 from loguru import logger
@@ -13,26 +14,22 @@ from src.loading.point import Point
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
+DEFAULT_CONTAINERS = [
+    ContainerParameters('20DV', length=5895, width=2350, height=2393, lifting_capacity=28200),
+    ContainerParameters('40DV', length=12032, width=2350, height=2393, lifting_capacity=28800),
+    ContainerParameters('40HQ', length=12032, width=2350, height=2697, lifting_capacity=28620),
+    ContainerParameters('45HQ', length=13556, width=2350, height=2697, lifting_capacity=27600),
+]
 
+
+@dataclass
 class Loader:
     _container_params: Dict[ContainerParameters, int]
     _shipment_params: Dict[ShipmentParameters, int]
     _loading_type: LoadingType
+    _with_order: bool
     _item_fabric: ItemFabric
-    _containers: List[Container]
-
-    def __init__(
-            self,
-            container_params: Dict[ContainerParameters, int],
-            shipment_params: Dict[ShipmentParameters, int],
-            loading_type: LoadingType,
-            item_fabric: ItemFabric,
-    ) -> None:
-        self._container_params = container_params
-        self._shipment_params = shipment_params
-        self._loading_type = loading_type
-        self._item_fabric = item_fabric
-        self._containers = []
+    _containers: List[Container] = field(init=False, default_factory=list)
 
     @property
     def containers(self) -> List[Container]:
@@ -44,7 +41,8 @@ class Loader:
 
     def load(self) -> None:
         self._compute_loading_locations()
-        self._compute_loading_order()
+        if self._with_order:
+            self._compute_loading_order()
         logger.info(f'Loaded, '
                     f'containers: {len(self._containers)}, '
                     f'loaded shipments: {sum([c.container_statistics.shipments for c in self.containers])}, '
@@ -59,22 +57,26 @@ class Loader:
             if not max_loaded_container:
                 break
             self._containers.append(max_loaded_container)
-            self._container_params[max_loaded_container.parameters] -= 1
+            if len(self._container_params) != 0:
+                self._container_params[max_loaded_container.parameters] -= 1
             for shipment_params, count in containers_to_shipment_counts[max_loaded_container].items():
                 self._reduce_shipments(shipment_params, count)
             logger.debug(f'Loaded containers: {len(self._containers)}')
             logger.debug(f'Left shipments: {self._count_shipments()}')
 
     def _compute_loading_order(self) -> None:
-        logger.debug('Computing loading order')
         for container in self._containers:
+            logger.debug(f'Computing loading order for {container}')
             min_point_to_id = container.min_point_to_id
             id_to_shipment = container.id_to_shipment
             container.unload()
             while len(min_point_to_id) > 0:
+
+                points_start = len(min_point_to_id)
                 last_loaded_point = None
                 for point in VerticalPointsIterator(min_point_to_id.keys()):
                     shipment = id_to_shipment[min_point_to_id[point]]
+
                     can_load = container.can_load_into_point(point, shipment.parameters)
                     if can_load:
                         if last_loaded_point and last_loaded_point.x != point.x:  # or last_loaded_point.z != point.z):
@@ -82,8 +84,15 @@ class Loader:
                         container.load(point, shipment)
                         min_point_to_id.pop(point)
                         last_loaded_point = point
-                        logger.debug(f'Next loading shipment: {shipment}, point: {point}, left: {len(min_point_to_id)}')
 
+                        logger.debug(f'Loaded to {point} {shipment}')
+
+                points_finish = len(min_point_to_id)
+                if points_start == points_finish:
+                    break
+
+            for point in min_point_to_id.keys():
+                logger.debug(f'Left {point}')
 
     def _calculate_shipment_params_order(self) -> List[ShipmentParameters]:
         return list(sorted(
@@ -113,6 +122,8 @@ class Loader:
         return containers_to_shipment_counts
 
     def _get_available_container_params(self) -> List[ContainerParameters]:
+        if len(self._container_params) == 0:
+            return DEFAULT_CONTAINERS
         return list(map(lambda x: x[0], filter(lambda x: x[1] != 0, self._container_params.items())))
 
     @staticmethod
@@ -134,22 +145,22 @@ class Loader:
     ) -> Dict[ShipmentParameters, int]:
         container_shipment_counts = defaultdict(int)
         for shipment_params in shipment_params_order:
-            logger.debug(f'Loading {shipment_params}')
-            shipment_count = self._shipment_params.get(shipment_params, 0)
-            while container_shipment_counts[shipment_params] < shipment_count:
-                logger.debug(f'Left: {shipment_count - container_shipment_counts[shipment_params]}')
+            shipment_count_left = self._shipment_params.get(shipment_params, 0)
+            while shipment_count_left > 0:
+                logger.debug(f'Loading {shipment_params}, left {shipment_count_left}')
                 if not self._load_shipment(shipment_params, container):
                     break
                 container_shipment_counts[shipment_params] += 1
+                shipment_count_left -= 1
         return container_shipment_counts
 
     def _load_shipment(self, shipment_params: ShipmentParameters, container: Container) -> bool:
-        logger.debug("Selecting loading point")
+        # logger.debug("Selecting loading point")
         shipment_params_variations = shipment_params.get_volume_params_variations()
         loading_point_and_shipment_params = self._select_loading_point(shipment_params_variations, container)
         if loading_point_and_shipment_params:
             loading_point, shipment_params = loading_point_and_shipment_params
-            logger.debug(f"Loading point found: {loading_point}, loading")
+            # logger.debug(f"Loading point found: {loading_point}, loading")
             shipment = self._item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
             return True
@@ -160,7 +171,7 @@ class Loader:
             shipment_params_variations: List[ShipmentParameters],
             container: Container
     ) -> Optional[Tuple[Point, ShipmentParameters]]:
-        logger.debug("Iterating container")
+        # logger.debug("Iterating container")
         for shipment_params in shipment_params_variations:
             for point in self._get_points_iterator(container):
                 can_load = container.can_load_into_point(point, shipment_params)

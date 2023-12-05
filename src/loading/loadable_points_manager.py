@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import Tuple, DefaultDict, Set, Optional
-
+from loguru import logger
 from src.loading.coordinate import Coordinate
 from src.loading.point import Point
 from src.loading.points_for_update import PointsForUpdate
@@ -30,7 +30,24 @@ class LoadablePointsManager:
         return self._loadable_point_to_max_points[point]
 
     def update_points(self, loading_p: Point, loading_max_p: Point, update_top_points: bool) -> None:
+        # logger.debug(f'Loading point {loading_p}, max loading point {loading_max_p}')
+        #
+        # if loading_p == Point(2561, 1203, 0):
+        #     for p, mps in self._loadable_point_to_max_points.items():
+        #         if mps:
+        #             for mp in mps:
+        #                 logger.debug(f'{p} has max point: {mp}')
+        #     logger.debug(f'///')
+
         points_for_update = self._select_points_for_update(loading_p, loading_max_p)
+
+        # if loading_p == Point(2510, 1204, 0):
+        #     for p in points_for_update.bottom_inner_points:
+        #         logger.debug(f'Bottom inner to update: {p}')
+        #     for p in points_for_update.bottom_border_points:
+        #         logger.debug(f'Bottom border: {p}')
+        #     logger.debug(f'///')
+
         self._update_bottom_points(
             loading_p,
             loading_max_p,
@@ -38,6 +55,29 @@ class LoadablePointsManager:
             points_for_update.bottom_border_points)
         if update_top_points:
             self._update_top_points(loading_p, loading_max_p, points_for_update.top_border_points)
+
+        # if loading_p == Point(2510, 1204, 0):
+        #     for p in points_for_update.bottom_inner_points:
+        #         logger.debug(f'Bottom inner to update: {p}')
+        #     for p in points_for_update.bottom_border_points:
+        #         logger.debug(f'Bottom border: {p}')
+        #     logger.debug(f'///')
+
+        # for p, mps in self._loadable_point_to_max_points.items():
+        #     if mps:
+        #         for mp in mps:
+        #             logger.debug(f'{p} has max point: {mp}')
+        # logger.debug('-' * 50)
+
+        # if Point(2561, 1203, 0) == loading_p:
+        #     for p, mps in self._loadable_point_to_max_points.items():
+        #         if mps:
+        #             for mp in mps:
+        #                 logger.debug(f'{p} has max point: {mp}')
+        #
+        # if Point(2561, 1203, 0) in self._loadable_point_to_max_points:
+        #     for mp in self._loadable_point_to_max_points[Point(2561, 1203, 0)]:
+        #         logger.debug(f'Point {Point(2561, 1203, 0)}, max available point: {mp}')
 
     def _select_points_for_update(self, loading_p: Point, loading_max_p: Point) -> PointsForUpdate:
         points_for_update = PointsForUpdate()
@@ -73,16 +113,40 @@ class LoadablePointsManager:
         self._loadable_point_to_max_points[inner_p].remove(inner_max_p)
         if inner_p.x < loading_p.x:
             new_max_p = inner_max_p.with_x(loading_p.x - 1)
+            # if loading_p == Point(2510, 1204, 0):
+            #     logger.debug(f'Inserting p: {inner_p}, max p: {new_max_p}')
+            #     logger.debug(f'///')
             self.try_insert_bottom_point(inner_p, new_max_p, border_points)
         if inner_max_p.x > loading_max_p.x:
             new_p = inner_p.with_x(loading_max_p.x + 1)
+            # if loading_p == Point(2510, 1204, 0):
+            #     logger.debug(f'Inserting p: {new_p}, max p: {inner_max_p}')
+            #     logger.debug(f'///')
             self.try_insert_bottom_point(new_p, inner_max_p, border_points)
-        if loading_p.y > inner_p.y:
+        if inner_p.y < loading_p.y:
             new_max_p = inner_max_p.with_y(loading_p.y - 1)
+            # if loading_p == Point(2510, 1204, 0):
+            #     logger.debug(f'Inserting p: {inner_p}, max p: {new_max_p}')
+            #     logger.debug(f'///')
             self.try_insert_bottom_point(inner_p, new_max_p, border_points)
         if inner_max_p.y > loading_max_p.y:
             new_p = inner_p.with_y(loading_max_p.y + 1)
+            # if loading_p == Point(2510, 1204, 0):
+            #     logger.debug(f'Inserting p: {new_p}, max p: {inner_max_p}')
+            #     logger.debug(f'///')
             self.try_insert_bottom_point(new_p, inner_max_p, border_points)
+
+        # if loading_p == Point(2510, 1204, 0):
+        #     for p, mps in self._loadable_point_to_max_points.items():
+        #         if mps:
+        #             for mp in mps:
+        #                 logger.debug(f'{p} has max point: {mp}')
+        #     logger.debug(f'///')
+        #     for p, mps in border_points.items():
+        #         if mps:
+        #             for mp in mps:
+        #                 logger.debug(f'Border {p} has max point: {mp}')
+        # logger.debug('-' * 50)
 
     def try_insert_bottom_point(self, p: Point, max_p: Point, border_points: DefaultDict[Point, Set[Point]]) -> None:
         """ Check if points on borders already exist and remove points which are inside other points. """

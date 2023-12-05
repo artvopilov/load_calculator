@@ -63,7 +63,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def _key(self) -> Tuple:
         return self.id, self._parameters.length, self._parameters.width, \
-               self._parameters.height, self._parameters.lifting_capacity
+            self._parameters.height, self._parameters.lifting_capacity
 
     def __str__(self) -> str:
         return f'Container: (' \
@@ -72,7 +72,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
                f'length={self.length}; ' \
                f'width={self.width}; ' \
                f'height={self.height}; ' \
-               f'lifting_capacity={self.length}' \
+               f'lifting_capacity={self.parameters.lifting_capacity}' \
                f')'
 
     def load(self, point: Point, shipment: Shipment) -> None:
@@ -116,6 +116,14 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         max_points = self._loadable_points_manager.get_max_points(point)
         for max_point in max_points:
             v = VolumeParameters.from_points(point, max_point)
+            # if max_point == Point(5894, 1203, 2392) or point == Point(2561, 1203, 0):
+            # if point == Point(2561, 1203, 0):
+            #     logger.debug(f'Loading point: {point}')
+            #     logger.debug(f'Available max point: {max_point}')
+            #     logger.debug(f'Available volume: {v}')
+            #     for p in self.min_point_to_id.keys():
+            #         if p.y == 1204:
+            #             logger.debug(f'Loaded points with 1204 y: {p}')
             if v.length < shipment_params.get_loading_length():
                 continue
             if v.width < shipment_params.get_loading_width():

@@ -45,8 +45,8 @@ def parse_shipment_counts(file_path: str) -> Dict[ShipmentParameters, int]:
 
 
 @click.command()
-@click.option('-f', '--file-path', default='/Users/artemvopilov/Downloads/loading_example.xlsx')
-@click.option('-l', '--loading-type', default='stable')
+@click.option('-f', '--file-path', default='')
+@click.option('-l', '--loading-type', default='compact')
 def main(file_path: Optional[str], loading_type: str):
     logger.remove()
     logger.add(sys.stdout, level='DEBUG')
@@ -56,7 +56,7 @@ def main(file_path: Optional[str], loading_type: str):
     for shipment_params, cnt in shipment_counts.items():
         logger.info(str(shipment_params), cnt)
 
-    loader = Loader({}, shipment_counts, LoadingType.from_name(loading_type), False, ItemFabric())
+    loader = Loader({}, shipment_counts, LoadingType.from_name(loading_type), True, ItemFabric())
     loader.load()
 
     loaded_containers = loader.containers

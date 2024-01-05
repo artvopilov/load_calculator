@@ -1,9 +1,8 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from flask import Request
 
 from src.api.request_data import RequestData
-from src.loading.loading_type import LoadingType
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -14,19 +13,10 @@ class RequestParser:
         pass
 
     def parse(self, request: Request) -> RequestData:
-        container_params_to_count = self._parse_container_params_to_count(request)
         shipment_params_to_count = self._parse_shipment_params_to_count(request)
-        loading_type = self._parse_loading_type(request)
-        return RequestData(container_params_to_count, shipment_params_to_count, loading_type)
-
-    def _parse_container_params_to_count(self, request: Request) -> Dict[ContainerParameters, int]:
-        if 'containers' not in request.json:
-            return {}
-        container_counts = {}
-        for container in request.json['containers']:
-            container_params = self._create_container_params(container)
-            container_counts[container_params] = container['number']
-        return container_counts
+        container_params_to_count = self._parse_container_params_to_count(request)
+        loading_type_name = self._parse_loading_type_name(request)
+        return RequestData(shipment_params_to_count, container_params_to_count, loading_type_name)
 
     def _parse_shipment_params_to_count(self, request: Request) -> Dict[ShipmentParameters, int]:
         shipment_counts = {}
@@ -35,11 +25,20 @@ class RequestParser:
             shipment_counts[shipment_params] = cargo['number']
         return shipment_counts
 
+    def _parse_container_params_to_count(self, request: Request) -> Optional[Dict[ContainerParameters, int]]:
+        if 'containers' not in request.json:
+            return None
+        container_counts = {}
+        for container in request.json['containers']:
+            container_params = self._create_container_params(container)
+            container_counts[container_params] = container['number']
+        return container_counts
+
     @staticmethod
-    def _parse_loading_type(request: Request) -> LoadingType:
+    def _parse_loading_type_name(request: Request) -> Optional[str]:
         if 'loading_type' in request.json:
-            return LoadingType.from_name(request.json['loading_type'])
-        return LoadingType.STABLE
+            return request.json['loading_type']
+        return None
 
     @staticmethod
     def _create_shipment_params(cargo_request: Dict) -> ShipmentParameters:

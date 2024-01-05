@@ -3,8 +3,7 @@ from loguru import logger
 
 from src.api.request_parser import RequestParser
 from src.api.response_builder import ResponseBuilder
-from src.items.item_fabric import ItemFabric
-from src.loading.loader import Loader
+from src.loading.loader_factory import LoaderFactory
 
 logger.remove()
 logger.add('logs/{time:YYYY-MM-DD}_info.log', level='INFO', rotation='00:00', retention=90)
@@ -28,12 +27,11 @@ def calculate():
     request_parser = RequestParser()
     request_data = request_parser.parse(request)
 
-    loader = Loader(
-        request_data.container_params,
+    loader_factory = LoaderFactory()
+    loader = loader_factory.create(
         request_data.shipment_params,
-        request_data.loading_type,
-        False,
-        ItemFabric()
+        request_data.container_params,
+        request_data.loading_type_name
     )
     loader.load()
 

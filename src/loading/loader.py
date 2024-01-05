@@ -14,13 +14,6 @@ from src.loading.point import Point
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
-DEFAULT_CONTAINERS = [
-    ContainerParameters('20DV', length=5895, width=2350, height=2393, lifting_capacity=28200),
-    ContainerParameters('40DV', length=12032, width=2350, height=2393, lifting_capacity=28800),
-    ContainerParameters('40HQ', length=12032, width=2350, height=2697, lifting_capacity=28620),
-    ContainerParameters('45HQ', length=13556, width=2350, height=2697, lifting_capacity=27600),
-]
-
 
 @dataclass
 class Loader:
@@ -57,8 +50,7 @@ class Loader:
             if not max_loaded_container:
                 break
             self._containers.append(max_loaded_container)
-            if len(self._container_params) != 0:
-                self._container_params[max_loaded_container.parameters] -= 1
+            self._container_params[max_loaded_container.parameters] -= 1
             for shipment_params, count in containers_to_shipment_counts[max_loaded_container].items():
                 self._reduce_shipments(shipment_params, count)
             logger.debug(f'Loaded containers: {len(self._containers)}')
@@ -122,8 +114,6 @@ class Loader:
         return containers_to_shipment_counts
 
     def _get_available_container_params(self) -> List[ContainerParameters]:
-        if len(self._container_params) == 0:
-            return DEFAULT_CONTAINERS
         return list(map(lambda x: x[0], filter(lambda x: x[1] != 0, self._container_params.items())))
 
     @staticmethod

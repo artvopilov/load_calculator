@@ -42,10 +42,12 @@ def parse_shipment_counts(file_path: str) -> Dict[ShipmentParameters, int]:
 
     shipment_counts = {}
     for ind, shipment in df.iterrows():
+        cargo_type =  shipment['Cargo type']
+        length = shipment['Length (cm)'] if cargo_type != 'barrel' else shipment['Width / Diameter for barrels (cm)']
         shipment_params = ShipmentParameters(
             shipment['Name'],
-            shipment['Cargo type'],
-            shipment['Length (cm)'] * 10,
+            cargo_type,
+            length * 10,
             shipment['Width / Diameter for barrels (cm)'] * 10,
             shipment['Height (cm)'] * 10,
             shipment['Weight (kg)'],
@@ -54,8 +56,9 @@ def parse_shipment_counts(file_path: str) -> Dict[ShipmentParameters, int]:
             not pd.isna(shipment['Turn over (height)']),
             not pd.isna(shipment['Turn over (length)']),
             not pd.isna(shipment['Turn over (width)']),
-            shipment['Extension']
+            shipment['Extension'] / 100
         )
+        print(shipment_params.extension)
         shipment_counts[shipment_params] = shipment['Q-ty']
 
     logger.info(f'Read {len(shipment_counts)} shipments')

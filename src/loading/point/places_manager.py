@@ -45,6 +45,10 @@ class PlacesManager:
         if with_top_places:
             self._update_top_places(used_opening_p, used_closing_p, points_update_info.top_border_points)
 
+        for opening_p in self.get_opening_points():
+            if len(self._places[opening_p]) == 0:
+                self._places.pop(opening_p)
+
     def _update_bottom_places(
             self,
             used_opening_p: Point,
@@ -140,11 +144,11 @@ class PlacesManager:
     ) -> Optional[Tuple[Point, Point]]:
         if border_closing_p.x + 1 == opening_p.x:
             new_opening_p = border_opening_p.with_y(max(border_opening_p.y, opening_p.y))
-            new_closing_p = border_closing_p.with_y(min(border_closing_p.y, closing_p.y))
+            new_closing_p = closing_p.with_y(min(border_closing_p.y, closing_p.y))
             return new_opening_p, new_closing_p
         elif border_closing_p.y + 1 == opening_p.y:
             new_opening_p = border_opening_p.with_x(max(border_opening_p.x, opening_p.x))
-            new_closing_p = border_closing_p.with_x(min(border_closing_p.x, closing_p.x))
+            new_closing_p = closing_p.with_x(min(border_closing_p.x, closing_p.x))
             return new_opening_p, new_closing_p
         elif border_opening_p.x - 1 == closing_p.x:
             new_opening_p = opening_p.with_y(max(border_opening_p.y, opening_p.y))
@@ -171,7 +175,8 @@ class PlacesManager:
 
     def _save_places(self, places: DefaultDict[Point, Set[Point]]) -> None:
         for opening_p, closing_ps in places.items():
-            self._places[opening_p] |= closing_ps
+            for closing_p in closing_ps:
+                self._places[opening_p].add(closing_p)
 
     @staticmethod
     def _place_is_inside(p: Point, max_p: Point, other_p: Point, other_max_p: Point) -> bool:

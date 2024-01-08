@@ -110,7 +110,7 @@ class ShipmentParameters(VolumeParameters, NameParameters):
             self._variations.sort(key=lambda v: [v.length, v.width, v.height], reverse=True)
 
     def _key(self) -> Tuple:
-        return self.name, self.form_type, self.length, self.width, self.height, self.weight
+        return self.name, self.form_type, self.length, self.width, self.height, self.weight, self.color
 
     def __str__(self) -> str:
         return f'Shipment parameters: ({self._key()})'

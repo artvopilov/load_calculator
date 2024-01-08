@@ -138,15 +138,14 @@ class Loader:
         for shipment_params in shipment_params_order:
             shipment_count_left = self._shipment_params.get(shipment_params, 0)
             while shipment_count_left > 0:
-                # logger.debug(f'Loading {shipment_params}, left {shipment_count_left}')
                 if not self._load_shipment(shipment_params, container):
                     break
                 container_shipment_counts[shipment_params] += 1
                 shipment_count_left -= 1
+                logger.debug(f'Loaded {shipment_params}, left {shipment_count_left}')
         return container_shipment_counts
 
     def _load_shipment(self, shipment_params: ShipmentParameters, container: Container) -> bool:
-        # logger.debug("Selecting loading point")
         shipment_params_variations = shipment_params.get_volume_params_variations()
         loading_point_and_shipment_params = self._select_loading_point(shipment_params_variations, container)
         if loading_point_and_shipment_params:

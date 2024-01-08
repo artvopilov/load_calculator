@@ -58,7 +58,6 @@ def parse_shipment_counts(file_path: str) -> Dict[ShipmentParameters, int]:
             not pd.isna(shipment['Turn over (width)']),
             shipment['Extension'] / 100
         )
-        print(shipment_params.extension)
         shipment_counts[shipment_params] = shipment['Q-ty']
 
     logger.info(f'Read {len(shipment_counts)} shipments')

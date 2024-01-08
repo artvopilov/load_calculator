@@ -151,10 +151,8 @@ class Loader:
         loading_point_and_shipment_params = self._select_loading_point(shipment_params_variations, container)
         if loading_point_and_shipment_params:
             loading_point, shipment_params = loading_point_and_shipment_params
-            # logger.debug(f"Loading point found: {loading_point}, loading")
             shipment = self._item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
-            logger.debug(f'Found {loading_point} for {shipment_params}')
             return True
         return False
 
@@ -163,11 +161,11 @@ class Loader:
             shipment_params_variations: List[ShipmentParameters],
             container: Container
     ) -> Optional[Tuple[Point, ShipmentParameters]]:
-        # logger.debug("Iterating container")
         for shipment_params in shipment_params_variations:
             for point in self._get_points_iterator(container):
                 can_load = container.can_load_into_point(point, shipment_params)
                 if can_load:
+                    logger.debug(f'Found {point} for {shipment_params}')
                     return point, shipment_params
         return None
 

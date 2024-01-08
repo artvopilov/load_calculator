@@ -5,7 +5,7 @@ from src.items.util_items.item import Item
 from src.items.util_items.name_item import NameItem
 from src.items.util_items.volume_item import VolumeItem
 from src.loading.point.point import Point
-from src.loading.point.points_manager import PointsManager
+from src.loading.point.places_manager import PlacesManager
 from src.loading.point.points_update_info_resolver import PointsUpdateInfoResolver
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -15,7 +15,7 @@ from src.statistics.container_statistics import ContainerStatistics
 
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
-    _points_manager: PointsManager
+    _points_manager: PlacesManager
     _id_to_min_point_shifted: Dict[int, Point]
     _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
@@ -27,7 +27,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         VolumeItem.__init__(self, parameters)
         NameItem.__init__(self, parameters)
         self._parameters = parameters
-        self._points_manager = PointsManager(parameters, PointsUpdateInfoResolver())
+        self._points_manager = PlacesManager(parameters, PointsUpdateInfoResolver())
         self._id_to_min_point_shifted = {}
         self._min_point_to_id = {}
         self._id_to_shipment = {}

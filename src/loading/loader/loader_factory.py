@@ -20,7 +20,7 @@ class LoaderFactory:
             shipment_params: Dict[ShipmentParameters, int],
             container_params: Optional[Dict[ContainerParameters, int]] = None,
             loading_type_name: Optional[str] = 'compact',
-            with_order: Optional[bool] = False
+            with_order: Optional[bool] = True
     ) -> Loader:
         container_params = self._resolve_container_params(container_params)
         loading_type = LoadingType.from_name(loading_type_name)

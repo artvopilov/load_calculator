@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 from src.items.container import Container
 from src.items.util_items.item import Item
+from src.loading.point.point import Point
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
-from src.loading.point import Point
 
 
 class Image3dCreator:
@@ -24,25 +24,25 @@ class Image3dCreator:
     ]
 
     X = [
-            [0, 0, 0, 0],
-            [0, 1, 1, 0],
-            [0, 1, 1, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
     ]
     Y = [
-            [0, 0, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 1, 1],
-            [0, 0, 1, 1]
+        [0, 0, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 1, 1],
+        [0, 0, 1, 1]
     ]
     Z = [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [0, 0, 0, 0]
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [0, 0, 0, 0]
     ]
 
     _current_time: datetime

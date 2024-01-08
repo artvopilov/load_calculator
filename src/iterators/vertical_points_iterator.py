@@ -1,7 +1,7 @@
 from typing import Tuple
 
-from src.loading.point import Point
-from src.iterators.points.points_iterator import PointsIterator
+from src.iterators.points_iterator import PointsIterator
+from src.loading.point.point import Point
 
 
 class VerticalPointsIterator(PointsIterator):

@@ -6,31 +6,31 @@ from loguru import logger
 
 from src.items.container import Container
 from src.items.item_fabric import ItemFabric
-from src.iterators.points.horizontal_points_iterator import HorizontalPointsIterator
-from src.iterators.points.points_iterator import PointsIterator
-from src.iterators.points.vertical_points_iterator import VerticalPointsIterator
+from src.iterators.horizontal_points_iterator import HorizontalPointsIterator
+from src.iterators.points_iterator import PointsIterator
+from src.iterators.vertical_points_iterator import VerticalPointsIterator
 from src.loading.loading_type import LoadingType
-from src.loading.point import Point
+from src.loading.point.point import Point
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
 
 @dataclass
 class Loader:
-    _container_params: Dict[ContainerParameters, int]
     _shipment_params: Dict[ShipmentParameters, int]
+    _container_params: Dict[ContainerParameters, int]
     _loading_type: LoadingType
     _with_order: bool
     _item_fabric: ItemFabric
     _containers: List[Container] = field(init=False, default_factory=list)
 
     @property
-    def containers(self) -> List[Container]:
-        return self._containers
-
-    @property
     def shipment_params(self) -> Dict[ShipmentParameters, int]:
         return self._shipment_params
+
+    @property
+    def containers(self) -> List[Container]:
+        return self._containers
 
     def load(self) -> None:
         self._compute_loading_locations()
@@ -71,7 +71,8 @@ class Loader:
 
                     can_load = container.can_load_into_point(point, shipment.parameters)
                     if can_load:
-                        if last_loaded_point and last_loaded_point.x != point.x:  # or last_loaded_point.z != point.z):
+                        if last_loaded_point is not None and last_loaded_point.x != point.x:
+                            # or last_loaded_point.z != point.z):
                             break
                         container.load(point, shipment)
                         min_point_to_id.pop(point)
@@ -137,7 +138,7 @@ class Loader:
         for shipment_params in shipment_params_order:
             shipment_count_left = self._shipment_params.get(shipment_params, 0)
             while shipment_count_left > 0:
-                logger.debug(f'Loading {shipment_params}, left {shipment_count_left}')
+                # logger.debug(f'Loading {shipment_params}, left {shipment_count_left}')
                 if not self._load_shipment(shipment_params, container):
                     break
                 container_shipment_counts[shipment_params] += 1
@@ -153,6 +154,7 @@ class Loader:
             # logger.debug(f"Loading point found: {loading_point}, loading")
             shipment = self._item_fabric.create_shipment(shipment_params)
             container.load(loading_point, shipment)
+            logger.debug(f'Found {loading_point} for {shipment_params}')
             return True
         return False
 
@@ -170,7 +172,7 @@ class Loader:
         return None
 
     def _get_points_iterator(self, container: Container) -> PointsIterator:
-        points = container.loadable_point_to_max_points.keys()
+        points = container.loadable_points
         if self._loading_type == LoadingType.STABLE:
             return HorizontalPointsIterator(points)
         else:

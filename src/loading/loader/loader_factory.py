@@ -1,7 +1,7 @@
 from typing import Dict, Optional, ClassVar
 
 from src.items.item_fabric import ItemFabric
-from src.loading.loader import Loader
+from src.loading.loader.loader import Loader
 from src.loading.loading_type import LoadingType
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
@@ -22,10 +22,10 @@ class LoaderFactory:
             loading_type_name: Optional[str] = 'compact',
             with_order: Optional[bool] = False
     ) -> Loader:
-        loading_type = LoadingType.from_name(loading_type_name)
         container_params = self._resolve_container_params(container_params)
+        loading_type = LoadingType.from_name(loading_type_name)
         item_factory = ItemFabric()
-        return Loader(container_params, shipment_params, loading_type, with_order, item_factory)
+        return Loader(shipment_params, container_params, loading_type, with_order, item_factory)
 
     def _resolve_container_params(
             self,

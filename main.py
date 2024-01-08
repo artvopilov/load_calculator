@@ -10,7 +10,7 @@ from loguru import logger
 
 from src.api.response_builder import ResponseBuilder
 from src.image_3d_creator import Image3dCreator
-from src.loading.loader_factory import LoaderFactory
+from src.loading.loader.loader_factory import LoaderFactory
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 
@@ -19,7 +19,7 @@ COLORS = list(mcolors.CSS4_COLORS.keys())
 
 def parse_container_counts(file_path: str) -> Dict[ContainerParameters, int]:
     df = pd.read_excel(file_path)
-    logger.info(f'Read df from {file_path}')
+    logger.debug(f'Read df from {file_path}')
 
     container_counts = {}
     for ind, container in df.iterrows():
@@ -32,13 +32,13 @@ def parse_container_counts(file_path: str) -> Dict[ContainerParameters, int]:
         )
         container_counts[container_params] = container['Quantity']
 
-    logger.info(f'Read {len(container_counts)} containers')
+    logger.debug(f'Read {len(container_counts)} containers')
     return container_counts
 
 
 def parse_shipment_counts(file_path: str) -> Dict[ShipmentParameters, int]:
     df = pd.read_excel(file_path)
-    logger.info(f'Read df from {file_path}')
+    logger.debug(f'Read df from {file_path}')
 
     shipment_counts = {}
     for ind, shipment in df.iterrows():
@@ -89,7 +89,7 @@ def main(
             logger.debug(str(container_params), cnt)
 
     loader_factory = LoaderFactory()
-    loader = loader_factory.create(shipment_counts, container_counts, loading_type_name)
+    loader = loader_factory.create(shipment_counts, container_counts, loading_type_name, True)
     loader.load()
 
     loaded_containers = loader.containers

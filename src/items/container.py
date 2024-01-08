@@ -1,11 +1,12 @@
-from typing import Dict, Tuple, List, Set, DefaultDict
+from typing import Dict, Tuple, List
 
 from src.items.shipment import Shipment
 from src.items.util_items.item import Item
 from src.items.util_items.name_item import NameItem
 from src.items.util_items.volume_item import VolumeItem
-from src.loading.loadable_points_manager import LoadablePointsManager
-from src.loading.point import Point
+from src.loading.point.point import Point
+from src.loading.point.points_manager import PointsManager
+from src.loading.point.points_update_info_resolver import PointsUpdateInfoResolver
 from src.parameters.container_parameters import ContainerParameters
 from src.parameters.shipment_parameters import ShipmentParameters
 from src.parameters.util_parameters.volume_parameters import VolumeParameters
@@ -14,7 +15,7 @@ from src.statistics.container_statistics import ContainerStatistics
 
 class Container(Item[ContainerParameters], VolumeItem, NameItem):
     _parameters: ContainerParameters
-    _loadable_points_manager: LoadablePointsManager
+    _points_manager: PointsManager
     _id_to_min_point_shifted: Dict[int, Point]
     _min_point_to_id: Dict[Point, int]
     _id_to_shipment: Dict[int, Shipment]
@@ -26,7 +27,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         VolumeItem.__init__(self, parameters)
         NameItem.__init__(self, parameters)
         self._parameters = parameters
-        self._loadable_points_manager = LoadablePointsManager(parameters)
+        self._points_manager = PointsManager(parameters, PointsUpdateInfoResolver())
         self._id_to_min_point_shifted = {}
         self._min_point_to_id = {}
         self._id_to_shipment = {}
@@ -38,8 +39,8 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return self._parameters
 
     @property
-    def loadable_point_to_max_points(self) -> DefaultDict[Point, Set[Point]]:
-        return self._loadable_points_manager.loadable_point_to_max_points
+    def loadable_points(self) -> List[Point]:
+        return self._points_manager.get_opening_points()
 
     @property
     def id_to_min_point_shifted(self) -> Dict[int, Point]:
@@ -88,7 +89,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         self._container_statistics.update(point, shipment.parameters)
 
     def unload(self) -> None:
-        self._loadable_points_manager.reset()
+        self._points_manager.reset()
         self._id_to_min_point_shifted = {}
         self._min_point_to_id = {}
         self._id_to_shipment = {}
@@ -113,7 +114,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
         return response
 
     def _volume_fits(self, point: Point, shipment_params: ShipmentParameters) -> bool:
-        max_points = self._loadable_points_manager.get_max_points(point)
+        max_points = self._points_manager.get_closing_points(point)
         for max_point in max_points:
             v = VolumeParameters.from_points(point, max_point)
             # if max_point == Point(5894, 1203, 2392) or point == Point(2561, 1203, 0):
@@ -140,7 +141,7 @@ class Container(Item[ContainerParameters], VolumeItem, NameItem):
 
     def _update_loadable_points(self, loading_p: Point, shipment: Shipment) -> None:
         loading_max_p = self._compute_max_point(loading_p, shipment.parameters)
-        self._loadable_points_manager.update_points(loading_p, loading_max_p, shipment.can_stack)
+        self._points_manager.update(loading_p, loading_max_p, shipment.can_stack)
 
     @staticmethod
     def _compute_max_point(point: Point, volume_parameters: VolumeParameters) -> Point:

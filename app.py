@@ -3,7 +3,7 @@ from loguru import logger
 
 from src.api.request_parser import RequestParser
 from src.api.response_builder import ResponseBuilder
-from src.loading.loader_factory import LoaderFactory
+from src.loading.loader.loader_factory import LoaderFactory
 
 logger.remove()
 logger.add('logs/{time:YYYY-MM-DD}_info.log', level='INFO', rotation='00:00', retention=90)
